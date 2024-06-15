@@ -7,7 +7,7 @@
 
 #include <cstddef>
 #include <memory>
-#include <sstream>
+#include <ostream>
 
 namespace SC2 {
   struct ASTNode
@@ -26,10 +26,8 @@ namespace SC2 {
       : value{ value }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       out << value.getValue();
     }
@@ -50,10 +48,8 @@ namespace SC2 {
       : expression{ expression }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       Utility::indent(out, indent_level);
       out << "return ";
@@ -82,10 +78,8 @@ namespace SC2 {
       , statement{ statement }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       Utility::indent(out, indent_level);
       out << "int " << function_name.getName() << "(void) {\n";
@@ -117,10 +111,8 @@ namespace SC2 {
       return function;
     }
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       function->prettyPrintHelper(out, indent_level);
     }

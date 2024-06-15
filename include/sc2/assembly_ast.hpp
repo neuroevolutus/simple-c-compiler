@@ -7,7 +7,7 @@
 
 #include <cstddef>
 #include <memory>
-#include <sstream>
+#include <ostream>
 #include <vector>
 
 namespace SC2 {
@@ -15,7 +15,8 @@ namespace SC2 {
     : public std::enable_shared_from_this<AssemblyASTNode>
     , public PrettyPrinterMixin
   {
-    virtual ~AssemblyASTNode() = default;
+    virtual constexpr void emitCode(std::ostream &out) = 0;
+    virtual ~AssemblyASTNode()                         = default;
   };
 
   struct OperandAssemblyASTNode: public AssemblyASTNode
@@ -25,13 +26,17 @@ namespace SC2 {
 
   struct RegisterAssemblyASTNode: public OperandAssemblyASTNode
   {
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       out << "Register %eax";
     }
+
+    virtual constexpr void emitCode(std::ostream &out) override
+    {
+      out << "%eax";
+    }
+
     virtual ~RegisterAssemblyASTNode() override = default;
   };
 
@@ -44,10 +49,13 @@ namespace SC2 {
       : value{ value }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void emitCode(std::ostream &out) override
+    {
+      out << "$" << value.getValue();
+    }
+
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       out << "ImmediateValue " << value.getValue();
     }
@@ -62,14 +70,18 @@ namespace SC2 {
 
   struct ReturnAssemblyASTNode: public InstructionAssemblyASTNode
   {
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void emitCode(std::ostream &out) override
+    {
+      out << "ret\n";
+    }
+
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       Utility::indent(out, indent_level);
       out << "Instruction: Ret\n";
     }
+
     virtual ~ReturnAssemblyASTNode() override = default;
   };
 
@@ -87,10 +99,18 @@ namespace SC2 {
       , destination{ destination }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    virtual constexpr void emitCode(std::ostream &out) override
+    {
+      Utility::indent(out, 2);
+      out << "movl ";
+      source->emitCode(out);
+      out << ", ";
+      destination->emitCode(out);
+      out << '\n';
+    }
+
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       Utility::indent(out, indent_level);
       out << "Instruction: Mov (";
@@ -117,10 +137,29 @@ namespace SC2 {
       , instructions{ instructions }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    constexpr std::string getName() const { return name.getName(); }
+
+    constexpr std::vector<std::shared_ptr<InstructionAssemblyASTNode>> const &
+    getInstructions() const
+    {
+      return instructions;
+    }
+
+    constexpr void emitCode(std::ostream &out) override
+    {
+      Utility::indent(out, 2);
+      std::string const specialised_function_name{
+        Utility::specialiseFunctionNameForOS(getName())
+      };
+      out << ".globl " << specialised_function_name << '\n';
+      out << specialised_function_name << ":\n";
+      for (auto const &instruction: getInstructions()) {
+        instruction->emitCode(out);
+      }
+    }
+
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       Utility::indent(out, indent_level);
       out << "Function: " << name.getName() << "\n";
@@ -137,18 +176,30 @@ namespace SC2 {
     std::shared_ptr<FunctionAssemblyASTNode> function{};
 
     public:
-    ProgramAssemblyASTNode(std::shared_ptr<FunctionAssemblyASTNode> function)
+    constexpr ProgramAssemblyASTNode(
+      std::shared_ptr<FunctionAssemblyASTNode> function
+    )
       : function{ function }
     {}
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
-    ) override
+    constexpr std::shared_ptr<FunctionAssemblyASTNode> getFunction() const
+    {
+      return function;
+    }
+
+    virtual constexpr void emitCode(std::ostream &out) override
+    {
+      function->emitCode(out);
+      Utility::emitAssemblyEpilogue(out);
+    }
+
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
     {
       out << "Program:\n";
       function->prettyPrintHelper(out, indent_level + 2);
     }
+
     virtual ~ProgramAssemblyASTNode() override = default;
   };
 } // namespace SC2

@@ -1,3 +1,4 @@
+#include <sc2/assembly_ast.hpp>
 #include <sc2/assembly_generator.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
@@ -41,6 +42,9 @@ int main(int argc, char const * const * const argv)
           std::string(argv[1])
         );
     }() };
+    auto const &file_basename{
+      preprocessed_file.substr(0, preprocessed_file.length() - 2)
+    };
     auto const &file_stream{ std::ifstream(preprocessed_file) };
     if (!file_stream) {
       std::perror("File opening failed");
@@ -59,6 +63,8 @@ int main(int argc, char const * const * const argv)
     auto const assembly{ SC2::AssemblyGenerator::generateProgramAssembly(program
     ) };
     if (option && *option == "--codegen") return EXIT_SUCCESS;
+    auto output_file_stream{ std::ofstream(file_basename + ".s") };
+    assembly->emitCode(output_file_stream);
   } catch (...) {
     exit_with_error_message();
   }

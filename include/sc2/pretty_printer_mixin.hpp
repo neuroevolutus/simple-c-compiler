@@ -2,14 +2,15 @@
 #define PRETTY_PRINTER_MIXIN_HPP_INCLUDED
 
 #include <cstdlib>
+#include <ostream>
 #include <sstream>
 
 namespace SC2 {
   struct PrettyPrinterMixin
   {
     virtual constexpr void prettyPrintHelper(
-      std::ostringstream &out,
-      std::size_t         indent_level
+      std::ostream &out,
+      std::size_t   indent_level
     ) noexcept(false)
       = 0;
     [[nodiscard]] constexpr std::string prettyPrint()
