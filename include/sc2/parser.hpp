@@ -179,27 +179,27 @@ namespace SC2 {
       if (lexer != lexer.end()) throw ParserExtraneousTokenError(*lexer);
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<Expression>
+    [[nodiscard]] constexpr std::shared_ptr<ExpressionASTNode>
     parseExpression() noexcept(false)
     try {
       LiteralConstant const literalConstant{ parseLiteralConstant() };
-      return std::make_shared<Expression>(literalConstant);
+      return std::make_shared<ExpressionASTNode>(literalConstant);
     } catch (ParserError const &error) {
       throw ParserNonTerminalError("expression", error);
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<Statement>
+    [[nodiscard]] constexpr std::shared_ptr<StatementASTNode>
     parseStatement() noexcept(false)
     try {
       expect(Token(Keyword::RETURN));
       auto const &expression{ parseExpression() };
       expect(Token(Semicolon));
-      return std::make_shared<Statement>(expression);
+      return std::make_shared<StatementASTNode>(expression);
     } catch (ParserError const &error) {
       throw ParserNonTerminalError("statement", error);
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<Function>
+    [[nodiscard]] constexpr std::shared_ptr<FunctionASTNode>
     parseFunction() noexcept(false)
     try {
       expect(Token(Keyword::INT));
@@ -210,7 +210,7 @@ namespace SC2 {
       expect(Token(Brace::LEFT_BRACE));
       auto const &statement{ parseStatement() };
       expect(Token(Brace::RIGHT_BRACE));
-      return std::make_shared<Function>(function_name, statement);
+      return std::make_shared<FunctionASTNode>(function_name, statement);
     } catch (ParserError const &error) {
       throw ParserNonTerminalError("function", error);
     }
@@ -218,10 +218,10 @@ namespace SC2 {
     public:
     constexpr Parser(Lexer &lexer): lexer{ lexer } {}
 
-    [[nodiscard]] constexpr std::shared_ptr<Program>
+    [[nodiscard]] constexpr std::shared_ptr<ProgramASTNode>
     parseProgram() noexcept(false)
     try {
-      auto const program{ std::make_shared<Program>(parseFunction()) };
+      auto const program{ std::make_shared<ProgramASTNode>(parseFunction()) };
       expectFinished();
       return program;
     } catch (ParserError const &error) {

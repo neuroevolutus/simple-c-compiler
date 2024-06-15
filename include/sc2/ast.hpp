@@ -5,23 +5,25 @@
 #include <sc2/tokens.hpp>
 #include <sc2/utility.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <sstream>
 
 namespace SC2 {
-  struct AbstractSyntaxTreeNode
-    : public std::enable_shared_from_this<AbstractSyntaxTreeNode>
+  struct ASTNode
+    : public std::enable_shared_from_this<ASTNode>
     , public PrettyPrinterMixin
   {
-    virtual ~AbstractSyntaxTreeNode() = default;
+    virtual ~ASTNode() = default;
   };
 
-  class Expression: public AbstractSyntaxTreeNode
+  class ExpressionASTNode: public ASTNode
   {
     LiteralConstant const value{};
 
     public:
-    explicit constexpr Expression(LiteralConstant const value): value{ value }
+    explicit constexpr ExpressionASTNode(LiteralConstant const value)
+      : value{ value }
     {}
 
     virtual constexpr void prettyPrintHelper(
@@ -32,15 +34,19 @@ namespace SC2 {
       out << value.getValue();
     }
 
-    virtual ~Expression() override = default;
+    LiteralConstant getLiteralConstant() const { return value; }
+
+    virtual ~ExpressionASTNode() override = default;
   };
 
-  class Statement: public AbstractSyntaxTreeNode
+  class StatementASTNode: public ASTNode
   {
-    std::shared_ptr<Expression> expression{};
+    std::shared_ptr<ExpressionASTNode> expression{};
 
     public:
-    explicit constexpr Statement(std::shared_ptr<Expression> expression)
+    explicit constexpr StatementASTNode(
+      std::shared_ptr<ExpressionASTNode> expression
+    )
       : expression{ expression }
     {}
 
@@ -55,18 +61,22 @@ namespace SC2 {
       out << ";\n";
     }
 
-    virtual ~Statement() override = default;
+    std::shared_ptr<ExpressionASTNode> getExpression() const
+    {
+      return expression;
+    }
+    virtual ~StatementASTNode() override = default;
   };
 
-  class Function: public AbstractSyntaxTreeNode
+  class FunctionASTNode: public ASTNode
   {
-    Identifier const           function_name{};
-    std::shared_ptr<Statement> statement{};
+    Identifier const                  function_name{};
+    std::shared_ptr<StatementASTNode> statement{};
 
     public:
-    explicit constexpr Function(
-      Identifier const           function_name,
-      std::shared_ptr<Statement> statement
+    explicit constexpr FunctionASTNode(
+      Identifier const                  function_name,
+      std::shared_ptr<StatementASTNode> statement
     )
       : function_name{ function_name }
       , statement{ statement }
@@ -83,27 +93,39 @@ namespace SC2 {
       out << "}\n";
     }
 
-    virtual ~Function() override = default;
+    constexpr Identifier getName() const { return function_name; }
+
+    constexpr std::shared_ptr<StatementASTNode> getStatement() const
+    {
+      return statement;
+    }
+
+    virtual ~FunctionASTNode() override = default;
   };
 
-  class Program: public AbstractSyntaxTreeNode
+  class ProgramASTNode: public ASTNode
   {
-    std::shared_ptr<Function> function_definition{};
+    std::shared_ptr<FunctionASTNode> function{};
 
     public:
-    explicit constexpr Program(std::shared_ptr<Function> function_definition)
-      : function_definition{ function_definition }
+    explicit constexpr ProgramASTNode(std::shared_ptr<FunctionASTNode> function)
+      : function{ function }
     {}
+
+    constexpr std::shared_ptr<FunctionASTNode> getFunction() const
+    {
+      return function;
+    }
 
     virtual constexpr void prettyPrintHelper(
       std::ostringstream &out,
       std::size_t         indent_level
     ) override
     {
-      function_definition->prettyPrintHelper(out, indent_level);
+      function->prettyPrintHelper(out, indent_level);
     }
 
-    virtual ~Program() override = default;
+    virtual ~ProgramASTNode() override = default;
   };
 } // namespace SC2
 

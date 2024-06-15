@@ -1,3 +1,4 @@
+#include <sc2/assembly_generator.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
 
@@ -55,6 +56,9 @@ int main(int argc, char const * const * const argv)
     SC2::Parser parser{ lexer };
     auto const  program{ parser.parseProgram() };
     if (option && *option == "--parse") return EXIT_SUCCESS;
+    auto const assembly{ SC2::AssemblyGenerator::generateProgramAssembly(program
+    ) };
+    if (option && *option == "--codegen") return EXIT_SUCCESS;
   } catch (...) {
     exit_with_error_message();
   }

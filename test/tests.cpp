@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_exception.hpp>
+#include <sc2/assembly_generator.hpp>
 #include <sc2/ast.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
@@ -153,9 +154,9 @@ TEST_CASE("parser behaves correctly")
 {
   SECTION("a basic program is correctly parsed")
   {
-    SC2::Lexer                    lexer{ basic_program_text };
-    SC2::Parser                   parser{ lexer };
-    std::shared_ptr<SC2::Program> program_ast{ parser.parseProgram() };
+    SC2::Lexer                           lexer{ basic_program_text };
+    SC2::Parser                          parser{ lexer };
+    std::shared_ptr<SC2::ProgramASTNode> program_ast{ parser.parseProgram() };
     REQUIRE(program_ast->prettyPrint() == basic_program_text);
   }
   SECTION("extraneous tokens at the end of a program cause an error")
@@ -246,4 +247,16 @@ TEST_CASE("parser behaves correctly")
       )
     );
   }
+}
+
+TEST_CASE("code generator behaves correctly")
+{
+  SC2::Lexer  lexer{ basic_program_text };
+  SC2::Parser parser{ lexer };
+  REQUIRE(SC2::AssemblyGenerator::generateProgramAssembly(parser.parseProgram())->prettyPrint() ==
+          "Program:\n"
+          "  Function: main\n"
+          "    Instruction: Mov (ImmediateValue 2), (Register %eax)\n"
+          "    Instruction: Ret\n"
+  );
 }

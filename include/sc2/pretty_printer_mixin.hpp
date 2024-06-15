@@ -1,6 +1,9 @@
 #ifndef PRETTY_PRINTER_MIXIN_HPP_INCLUDED
 #define PRETTY_PRINTER_MIXIN_HPP_INCLUDED
 
+#include <cstdlib>
+#include <sstream>
+
 namespace SC2 {
   struct PrettyPrinterMixin
   {
