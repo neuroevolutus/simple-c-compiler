@@ -16,8 +16,7 @@
 void exit_with_error_message()
 {
   char const * const error_message{
-    "Error: wrong number of arguments\n"
-    "  Usage: c-compiler [-(-(lex|parse|codegen)|S)] /path/to/file.c\n"
+    "Error: Usage: sc2 [-(-(lex|parse|codegen)|S)] /path/to/file.c\n"
   };
   std::cerr << error_message;
   std::exit(EXIT_FAILURE);
@@ -25,7 +24,8 @@ void exit_with_error_message()
 
 int main(int argc, char const * const * const argv)
 {
-  if (argc < 2 || argc > 3) { exit_with_error_message(); }
+  if (argc < 2 || argc > 3)
+    throw std::runtime_error("Wrong number of arguments");
   try {
     auto const &[option, preprocessed_file]{ [argc, argv] {
       if (argc == 3) {
@@ -65,7 +65,8 @@ int main(int argc, char const * const * const argv)
     if (option && *option == "--codegen") return EXIT_SUCCESS;
     auto output_file_stream{ std::ofstream(file_basename + ".s") };
     assembly->emitCode(output_file_stream);
-  } catch (...) {
+  } catch (std::exception const &exception) {
+    std::cerr << exception.what() << '\n';
     exit_with_error_message();
   }
   return EXIT_SUCCESS;

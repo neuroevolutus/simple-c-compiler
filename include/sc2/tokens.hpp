@@ -64,22 +64,40 @@ namespace SC2 {
     constexpr auto operator<=>(SemicolonTag const &) const = default;
   } Semicolon{};
 
-  template <typename... Ts> struct overloaded: Ts...
+  inline constexpr struct TildeTag
+  {
+    constexpr auto operator<=>(TildeTag const &) const = default;
+  } Tilde{};
+
+  inline constexpr struct HyphenTag
+  {
+    constexpr auto operator<=>(HyphenTag const &) const = default;
+  } Hyphen{};
+
+  inline constexpr struct DecrementTag
+  {
+    constexpr auto operator<=>(DecrementTag const &) const = default;
+  } Decrement{};
+
+  template <typename... Ts> struct Overloaded: Ts...
   {
     using Ts::operator()...;
   };
 
-  template <typename... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+  template <typename... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
   class Token
   {
     using type = std::variant<
       SemicolonTag,
+      TildeTag,
+      HyphenTag,
+      DecrementTag,
+      Parenthesis,
+      Brace,
       Identifier,
       LiteralConstant,
-      Keyword,
-      Parenthesis,
-      Brace>;
+      Keyword>;
     type token{};
 
     public:
@@ -88,53 +106,65 @@ namespace SC2 {
     constexpr Token(Token const &)                    = default;
     constexpr auto   operator<=>(Token const &) const = default;
     constexpr Token &operator=(Token const &)         = default;
+
+    // clang-format off
     [[nodiscard]] constexpr std::string toString() const noexcept(false)
     {
+      using namespace std::literals::string_literals;
       return std::visit(
-        overloaded(
-          [](SemicolonTag) -> std::string { return "semicolon"; },
-          [](Identifier const &identifier) -> std::string {
-        return std::format("Identifier: {}", identifier.getName());
-      },
-          [](LiteralConstant const &literalConstant) -> std::string {
-        return std::format("Literal constant: {}", literalConstant.getValue());
-      },
-          [](Keyword keyword) -> std::string {
-        return std::format("Keyword: {}", [keyword]() {
-          switch (keyword) {
-            case Keyword::INT: return "int"; break;
-            case Keyword::RETURN: return "return"; break;
-            case Keyword::VOID: return "void"; break;
-            default: std::unreachable();
+        Overloaded(
+          [](SemicolonTag) { return "semicolon"s; },
+          [](TildeTag) { return "tilde"s; },
+          [](HyphenTag) { return "hyphen"s; },
+          [](DecrementTag) { return "decrement"s; },
+          [](Identifier const &identifier) {
+            return std::format("Identifier: {}", identifier.getName());
+          },
+          [](LiteralConstant const &literalConstant) {
+            return std::format("Literal constant: {}", literalConstant.getValue());
+          },
+          [](Keyword keyword) {
+            return std::format("Keyword: {}", [keyword]() {
+              switch (keyword) {
+                case Keyword::INT: return "int"s; break;
+                case Keyword::RETURN: return "return"s; break;
+                case Keyword::VOID: return "void"s; break;
+                default: std::unreachable();
+              }
+            }());
+          },
+          [](Parenthesis parenthesis) {
+            switch (parenthesis) {
+              case Parenthesis::LEFT_PARENTHESIS:
+                return "left parenthesis"s;
+                break;
+              case Parenthesis::RIGHT_PARENTHESIS:
+                return "right parenthesis"s;
+                break;
+              default: std::unreachable();
+            }
+          },
+          [](Brace brace) {
+            switch (brace) {
+              case Brace::LEFT_BRACE: return "left curly brace"s; break;
+              case Brace::RIGHT_BRACE: return "right curly brace"s; break;
+              default: std::unreachable();
+            }
           }
-        }());
-      },
-          [](Parenthesis parenthesis) -> std::string {
-        switch (parenthesis) {
-          case Parenthesis::LEFT_PARENTHESIS: return "left parenthesis"; break;
-          case Parenthesis::RIGHT_PARENTHESIS:
-            return "right parenthesis";
-            break;
-          default: std::unreachable();
-        }
-      },
-          [](Brace brace) -> std::string {
-        switch (brace) {
-          case Brace::LEFT_BRACE: return "left curly brace"; break;
-          case Brace::RIGHT_BRACE: return "right curly brace"; break;
-          default: std::unreachable();
-        }
-      }
         ),
         token
       );
-    }
+    } // clang-format on
+
     [[nodiscard]] Identifier      getIdentifier() const noexcept(false);
     [[nodiscard]] LiteralConstant getLiteralConstant() const;
     [[nodiscard]] Keyword         getKeyword() const noexcept(false);
     [[nodiscard]] Parenthesis     getParenthesis() const noexcept(false);
     [[nodiscard]] Brace           getBrace() const noexcept(false);
     [[nodiscard]] SemicolonTag    getSemicolon() const noexcept(false);
+    [[nodiscard]] TildeTag        getTilde() const noexcept(false);
+    [[nodiscard]] HyphenTag       getHyphen() const noexcept(false);
+    [[nodiscard]] DecrementTag    getDecrement() const noexcept(false);
   };
 
   class TokenConversionError: public std::exception
@@ -174,6 +204,7 @@ namespace SC2 {
   } catch (std::bad_variant_access const &) {
     throw TokenConversionError(*this, "identifier");
   }
+
   [[nodiscard]] LiteralConstant Token::getLiteralConstant() const
     noexcept(false)
   try {
@@ -181,24 +212,28 @@ namespace SC2 {
   } catch (std::bad_variant_access const &) {
     throw TokenConversionError(*this, "literal constant");
   }
+
   [[nodiscard]] Keyword Token::getKeyword() const noexcept(false)
   try {
     return std::get<Keyword>(token);
   } catch (std::bad_variant_access const &) {
     throw TokenConversionError(*this, "keyword");
   }
+
   [[nodiscard]] Parenthesis Token::getParenthesis() const noexcept(false)
   try {
     return std::get<Parenthesis>(token);
   } catch (std::bad_variant_access const &) {
     throw TokenConversionError(*this, "parenthesis");
   }
+
   [[nodiscard]] Brace Token::getBrace() const noexcept(false)
   try {
     return std::get<Brace>(token);
   } catch (std::bad_variant_access const &) {
     throw TokenConversionError(*this, "brace");
   }
+
   [[nodiscard]] SemicolonTag Token::getSemicolon() const noexcept(false)
   try {
     return std::get<SemicolonTag>(token);
@@ -206,6 +241,26 @@ namespace SC2 {
     throw TokenConversionError(*this, "semicolon");
   }
 
+  [[nodiscard]] TildeTag Token::getTilde() const noexcept(false)
+  try {
+    return std::get<TildeTag>(token);
+  } catch (std::bad_variant_access const &) {
+    throw TokenConversionError(*this, "tilde");
+  }
+
+  [[nodiscard]] HyphenTag Token::getHyphen() const noexcept(false)
+  try {
+    return std::get<HyphenTag>(token);
+  } catch (std::bad_variant_access const &) {
+    throw TokenConversionError(*this, "hyphen");
+  }
+
+  [[nodiscard]] DecrementTag Token::getDecrement() const noexcept(false)
+  try {
+    return std::get<DecrementTag>(token);
+  } catch (std::bad_variant_access const &) {
+    throw TokenConversionError(*this, "decrement");
+  }
 } // namespace SC2
 
 #endif

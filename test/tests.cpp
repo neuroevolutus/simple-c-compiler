@@ -132,6 +132,36 @@ TEST_CASE("lexer behaves correctly")
     REQUIRE(tokens[1].getSemicolon() == SC2::Semicolon);
     REQUIRE(tokens[2].getSemicolon() == SC2::Semicolon);
   }
+  SECTION("tildes are correctly lexed")
+  {
+    SC2::Lexer              lexer{ "~~~" };
+    std::vector<SC2::Token> tokens{};
+    for (auto const &token: lexer) { tokens.push_back(token); }
+    REQUIRE(tokens[0].getTilde() == SC2::Tilde);
+    REQUIRE(tokens[1].getTilde() == SC2::Tilde);
+    REQUIRE(tokens[2].getTilde() == SC2::Tilde);
+  }
+  SECTION("hyphens are correctly lexed")
+  {
+    SC2::Lexer              lexer{ "-abc123-hello" };
+    std::vector<SC2::Token> tokens{};
+    for (auto const &token: lexer) { tokens.push_back(token); }
+    REQUIRE(tokens[0].getHyphen() == SC2::Hyphen);
+    REQUIRE(tokens[1].getIdentifier() == SC2::Identifier("abc123"));
+    REQUIRE(tokens[2].getHyphen() == SC2::Hyphen);
+    REQUIRE(tokens[3].getIdentifier() == SC2::Identifier("hello"));
+  }
+  SECTION("decrements are correctly lexed")
+  {
+    SC2::Lexer              lexer{ "---abc123--hello" };
+    std::vector<SC2::Token> tokens{};
+    for (auto const &token: lexer) { tokens.push_back(token); }
+    REQUIRE(tokens[0].getDecrement() == SC2::Decrement);
+    REQUIRE(tokens[1].getHyphen() == SC2::Hyphen);
+    REQUIRE(tokens[2].getIdentifier() == SC2::Identifier("abc123"));
+    REQUIRE(tokens[3].getDecrement() == SC2::Decrement);
+    REQUIRE(tokens[4].getIdentifier() == SC2::Identifier("hello"));
+  }
   SECTION("a basic program is correctly lexed")
   {
     SC2::Lexer              lexer{ basic_program_text };

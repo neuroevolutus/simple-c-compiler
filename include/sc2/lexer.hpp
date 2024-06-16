@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <cstddef>
 #include <exception>
@@ -14,7 +15,6 @@
 #include <regex>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 namespace SC2 {
 
@@ -59,6 +59,9 @@ namespace SC2 {
     static std::regex parenthesis_regex;
     static std::regex brace_regex;
     static std::regex semicolon_regex;
+    static std::regex tilde_regex;
+    static std::regex hyphen_regex;
+    static std::regex decrement_regex;
 
     std::string program_text{};
     Token       current_token;
@@ -129,6 +132,9 @@ namespace SC2 {
         std::cmatch parenthesis_regex_match{};
         std::cmatch brace_regex_match{};
         std::cmatch semicolon_regex_match{};
+        std::cmatch tilde_regex_match{};
+        std::cmatch hyphen_regex_match{};
+        std::cmatch decrement_regex_match{};
         std::regex_search(
           program_text.c_str(),
           program_text.c_str() + program_text.size(),
@@ -159,12 +165,33 @@ namespace SC2 {
           semicolon_regex_match,
           semicolon_regex
         );
-        std::vector<std::cmatch::difference_type> const match_sizes{
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          tilde_regex_match,
+          tilde_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          hyphen_regex_match,
+          hyphen_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          decrement_regex_match,
+          decrement_regex
+        );
+        std::array<std::cmatch::difference_type, 8> const match_sizes{
           identifier_regex_match.length(),
           literal_constant_regex_match.length(),
           parenthesis_regex_match.length(),
           brace_regex_match.length(),
-          semicolon_regex_match.length()
+          semicolon_regex_match.length(),
+          tilde_regex_match.length(),
+          hyphen_regex_match.length(),
+          decrement_regex_match.length()
         };
         std::cmatch::difference_type const largest_match_size{
           match_sizes[std::ranges::distance(
@@ -225,6 +252,12 @@ namespace SC2 {
             std::unreachable();
         } else if (semicolon_regex_match.length() == largest_match_size) {
           current_token = Token(Semicolon);
+        } else if (tilde_regex_match.length() == largest_match_size) {
+          current_token = Token(Tilde);
+        } else if (hyphen_regex_match.length() == largest_match_size) {
+          current_token = Token(Hyphen);
+        } else if (decrement_regex_match.length() == largest_match_size) {
+          current_token = Token(Decrement);
         } else
           std::unreachable();
         program_text.erase(0, largest_match_size);
@@ -238,24 +271,40 @@ namespace SC2 {
     "^(\\s+)",
     std::regex::ECMAScript | std::regex::optimize
   );
+
   std::regex Lexer::identifier_regex(
     "^[a-zA-Z_]\\w*\\b",
     std::regex::ECMAScript | std::regex::optimize
   );
+
   std::regex Lexer::literal_constant_regex(
     "^[0-9]+\\b",
     std::regex::ECMAScript | std::regex::optimize
   );
+
   std::regex Lexer::parenthesis_regex(
     "^(\\(|\\))",
     std::regex::ECMAScript | std::regex::optimize
   );
+
   std::regex Lexer::brace_regex(
     "^(\\{|\\})",
     std::regex::ECMAScript | std::regex::optimize
   );
+
   std::regex
     Lexer::semicolon_regex("^;", std::regex::ECMAScript | std::regex::optimize);
+
+  std::regex
+    Lexer::tilde_regex("^~", std::regex::ECMAScript | std::regex::optimize);
+
+  std::regex
+    Lexer::hyphen_regex("^-", std::regex::ECMAScript | std::regex::optimize);
+
+  std::regex Lexer::decrement_regex(
+    "^--",
+    std::regex::ECMAScript | std::regex::optimize
+  );
 
 } // namespace SC2
 
