@@ -1,7 +1,7 @@
 #ifndef SC2_TOKENS_HPP_INCLUDED
 #define SC2_TOKENS_HPP_INCLUDED
 
-#include <sc2/tokens.hpp>
+#include <sc2/compiler_error.hpp>
 
 #include <format>
 #include <string>
@@ -167,7 +167,7 @@ namespace SC2 {
     [[nodiscard]] DecrementTag    getDecrement() const noexcept(false);
   };
 
-  class TokenConversionError: public std::exception
+  class TokenConversionError: public CompilerError
   {
     std::string const message{};
     Token const       source_token{};

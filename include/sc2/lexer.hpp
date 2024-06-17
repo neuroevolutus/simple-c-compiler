@@ -1,6 +1,7 @@
 #ifndef SC2_LEXER_HPP_INCLUDED
 #define SC2_LEXER_HPP_INCLUDED
 
+#include <sc2/compiler_error.hpp>
 #include <sc2/tokens.hpp>
 #include <string_view>
 
@@ -18,7 +19,7 @@
 
 namespace SC2 {
 
-  struct LexerError: public std::exception
+  struct LexerError: public CompilerError
   {
     virtual ~LexerError() = default;
   };

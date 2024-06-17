@@ -1,9 +1,11 @@
 #include <sc2/assembly_ast.hpp>
 #include <sc2/assembly_generator.hpp>
+#include <sc2/compiler_error.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
 
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -13,25 +15,29 @@
 #include <string>
 #include <utility>
 
-void exit_with_error_message()
+constexpr char const * const usage_error_message{
+  "Error: Usage: sc2 [-(-(lex|parse|codegen)|S)] /path/to/file.c\n"
+};
+
+void exit_with_usage_error_message()
 {
-  char const * const error_message{
-    "Error: Usage: sc2 [-(-(lex|parse|codegen)|S)] /path/to/file.c\n"
-  };
-  std::cerr << error_message;
+  std::cerr << usage_error_message;
   std::exit(EXIT_FAILURE);
 }
 
 int main(int argc, char const * const * const argv)
 {
+  using namespace std::literals::string_literals;
   if (argc < 2 || argc > 3)
     throw std::runtime_error("Wrong number of arguments");
   try {
     auto const &[option, preprocessed_file]{ [argc, argv] {
       if (argc == 3) {
-        if (argv[1] != "--lex" && argv[1] != "--parse" && argv[1] != "--codegen"
-            && argv[1] != "-S")
-          throw std::invalid_argument("Invalid long option");
+        if (argv[1] != "--lex"s && argv[1] != "--parse"s
+            && argv[1] != "--codegen"s && argv[1] != "-S"s)
+          throw std::invalid_argument(
+            std::format("Invalid long option: {}", argv[1])
+          );
         return std::make_pair(
           std::optional{ std::string(argv[1]) },
           std::string(argv[2])
@@ -65,9 +71,12 @@ int main(int argc, char const * const * const argv)
     if (option && *option == "--codegen") return EXIT_SUCCESS;
     auto output_file_stream{ std::ofstream(file_basename + ".s") };
     assembly->emitCode(output_file_stream);
+  } catch (SC2::CompilerError const &exception) {
+    std::cerr << "Compiler error:\n" << exception.what();
+    std::exit(EXIT_FAILURE);
   } catch (std::exception const &exception) {
-    std::cerr << exception.what() << '\n';
-    exit_with_error_message();
+    std::cerr << "Usage error:\n" << exception.what() << '\n';
+    exit_with_usage_error_message();
   }
   return EXIT_SUCCESS;
 }

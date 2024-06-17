@@ -2,6 +2,7 @@
 #define SC2_PARSER_HPP_INCLUDED
 
 #include <sc2/ast.hpp>
+#include <sc2/compiler_error.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/tokens.hpp>
 
@@ -12,7 +13,7 @@
 
 namespace SC2 {
 
-  struct ParserError: public std::exception
+  struct ParserError: public CompilerError
   {
     virtual ~ParserError() = default;
   };
