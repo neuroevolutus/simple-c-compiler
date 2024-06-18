@@ -5,6 +5,7 @@
 #include <sc2/ast.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
+#include <sc2/test_fixtures.hpp>
 #include <string_view>
 
 #include <array>
@@ -14,12 +15,6 @@
 #include <ranges>
 #include <variant>
 #include <vector>
-
-static constexpr char const * const basic_program_text{
-  "int main(void) {\n"
-  "  return 2;\n"
-  "}\n"
-};
 
 TEST_CASE("lexer behaves correctly")
 {
@@ -178,115 +173,4 @@ TEST_CASE("lexer behaves correctly")
     REQUIRE(tokens[8].getSemicolon() == SC2::Semicolon);
     REQUIRE(tokens[9].getBrace() == SC2::Brace::RIGHT_BRACE);
   }
-}
-
-TEST_CASE("parser behaves correctly")
-{
-  SECTION("a basic program is correctly parsed")
-  {
-    SC2::Lexer                           lexer{ basic_program_text };
-    SC2::Parser                          parser{ lexer };
-    std::shared_ptr<SC2::ProgramASTNode> program_ast{ parser.parseProgram() };
-    REQUIRE(program_ast->prettyPrint() == basic_program_text);
-  }
-  SECTION("extraneous tokens at the end of a program cause an error")
-  {
-    constexpr char const * const invalid_program_text{
-      "int main(void) {\n"
-      "  return 2;\n"
-      "}d"
-    };
-    SC2::Lexer  lexer{ invalid_program_text };
-    SC2::Parser parser{ lexer };
-    REQUIRE_THROWS_MATCHES(
-      parser.parseProgram(),
-      SC2::ParserNonTerminalError,
-      Catch::Matchers::Message("Parser error: invalid non-terminal <program>:\n"
-                               "Parser error: Extraneous token: (Identifier: d)"
-      )
-    );
-  }
-  SECTION("end of file is handled correctly")
-  {
-    constexpr char const * const invalid_program_text{
-      "int main(void) {\n"
-      "  return 2;\n"
-      ""
-    };
-    SC2::Lexer  lexer{ invalid_program_text };
-    SC2::Parser parser{ lexer };
-    REQUIRE_THROWS_MATCHES(
-      parser.parseProgram(),
-      SC2::ParserNonTerminalError,
-      Catch::Matchers::Message(
-        "Parser error: invalid non-terminal <program>:\n"
-        "Parser error: invalid non-terminal <function>:\n"
-        "Parser error: reached end of file"
-      )
-    );
-  }
-  SECTION("invalid tokens are handled correctly")
-  {
-    constexpr char const * const invalid_program_text_zero{
-      "int return(void) {\n"
-      "  return 2;\n"
-      "}"
-    };
-    SC2::Lexer  lexer_zero{ invalid_program_text_zero };
-    SC2::Parser parser_zero{ lexer_zero };
-    REQUIRE_THROWS_MATCHES(
-      parser_zero.parseProgram(),
-      SC2::ParserNonTerminalError,
-      Catch::Matchers::Message(
-        "Parser error: invalid non-terminal <program>:\n"
-        "Parser error: invalid non-terminal <function>:\n"
-        "Parser error: Cannot create (identifier) from (Keyword: return)"
-      )
-    );
-    constexpr char const * const invalid_program_text_one{
-      "int main(void) {\n"
-      "  return 2)\n"
-      "}"
-    };
-    SC2::Lexer  lexer_one{ invalid_program_text_one };
-    SC2::Parser parser_one{ lexer_one };
-    REQUIRE_THROWS_MATCHES(
-      parser_one.parseProgram(),
-      SC2::ParserNonTerminalError,
-      Catch::Matchers::Message(
-        "Parser error: invalid non-terminal <program>:\n"
-        "Parser error: invalid non-terminal <function>:\n"
-        "Parser error: invalid non-terminal <statement>:\n"
-        "Parser error: Expected (semicolon) but got (right parenthesis)"
-      )
-    );
-    constexpr char const * const invalid_program_text_two{
-      "int main(void) {\n"
-      "  return 2;\n"
-      "<"
-    };
-    SC2::Lexer  lexer_two{ invalid_program_text_two };
-    SC2::Parser parser_two{ lexer_two };
-    REQUIRE_THROWS_MATCHES(
-      parser_two.parseProgram(),
-      SC2::ParserNonTerminalError,
-      Catch::Matchers::Message(
-        "Parser error: invalid non-terminal <program>:\n"
-        "Parser error: invalid non-terminal <function>:\n"
-        "Lexer error: Invalid token: <"
-      )
-    );
-  }
-}
-
-TEST_CASE("code generator behaves correctly")
-{
-  SC2::Lexer  lexer{ basic_program_text };
-  SC2::Parser parser{ lexer };
-  REQUIRE(SC2::AssemblyGenerator::generateProgramAssembly(parser.parseProgram())->prettyPrint() ==
-          "Program:\n"
-          "  Function: main\n"
-          "    Instruction: Mov (ImmediateValue 2), (Register %eax)\n"
-          "    Instruction: Ret\n"
-  );
 }

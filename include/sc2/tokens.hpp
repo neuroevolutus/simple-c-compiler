@@ -156,6 +156,31 @@ namespace SC2 {
       );
     } // clang-format on
 
+    [[nodiscard]] constexpr bool isLiteralConstant() const noexcept
+    {
+      return std::holds_alternative<LiteralConstant>(token);
+    }
+
+    [[nodiscard]] constexpr bool isTilde() const noexcept
+    {
+      return std::holds_alternative<TildeTag>(token);
+    }
+
+    [[nodiscard]] constexpr bool isHyphen() const noexcept
+    {
+      return std::holds_alternative<HyphenTag>(token);
+    }
+
+    [[nodiscard]] constexpr bool isDecrement() const noexcept
+    {
+      return std::holds_alternative<DecrementTag>(token);
+    }
+
+    [[nodiscard]] constexpr bool isParenthesis() const noexcept
+    {
+      return std::holds_alternative<Parenthesis>(token);
+    }
+
     [[nodiscard]] Identifier      getIdentifier() const noexcept(false);
     [[nodiscard]] LiteralConstant getLiteralConstant() const;
     [[nodiscard]] Keyword         getKeyword() const noexcept(false);
