@@ -2,6 +2,7 @@
 #define SC2_ASSEMBLY_AST_HPP_INCLUDED
 
 #include <sc2/ast.hpp>
+#include <sc2/compiler_error.hpp>
 #include <sc2/pretty_printer_mixin.hpp>
 #include <sc2/utility.hpp>
 #include <string_view>
@@ -9,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <iostream>
 #include <memory>
 #include <numeric>
@@ -21,6 +23,24 @@
 #include <vector>
 
 namespace SC2 {
+  class CodeEmissionError: public CompilerError
+  {
+    std::string const message{};
+
+    public:
+    CodeEmissionError(std::string_view assembly_ast_node)
+      : message{ std::format(
+          "Cannot emit code for assembly AST node: {}",
+          assembly_ast_node
+        ) }
+    {}
+
+    constexpr virtual char const *what() const noexcept final override
+    {
+      return message.c_str();
+    }
+  };
+
   struct ReplacePseudoRegistersInput
   {
     std::intptr_t                                  last_offset{};
@@ -44,17 +64,14 @@ namespace SC2 {
 
   struct OperandAssemblyASTNode: public AssemblyASTNode
   {
-    [[nodiscard]] virtual constexpr ReplacePseudoRegistersResult<
-      OperandAssemblyASTNode>
+    [[nodiscard]] virtual ReplacePseudoRegistersResult<OperandAssemblyASTNode>
     replacePseudoRegisters(ReplacePseudoRegistersInput &&input)
     {
       auto [offset, map]{ std::move(input) };
       return ReplacePseudoRegistersResult<OperandAssemblyASTNode>{
         offset,
         std::move(map),
-        std::dynamic_pointer_cast<OperandAssemblyASTNode>(
-          std::move(shared_from_this())
-        )
+        std::dynamic_pointer_cast<OperandAssemblyASTNode>(shared_from_this())
       };
     }
 
@@ -185,8 +202,14 @@ namespace SC2 {
       return identifier;
     }
 
-    [[nodiscard]] virtual constexpr ReplacePseudoRegistersResult<
-      OperandAssemblyASTNode>
+    private:
+    constexpr std::string toString() const
+    {
+      return std::format("PseudoRegister: {}", getIdentifier());
+    }
+
+    public:
+    [[nodiscard]] virtual ReplacePseudoRegistersResult<OperandAssemblyASTNode>
     replacePseudoRegisters(ReplacePseudoRegistersInput &&input) final override
     {
       auto [offset, map]{ std::move(input) };
@@ -200,15 +223,15 @@ namespace SC2 {
                std::make_shared<StackOffsetAssemblyASTNode>(stack_offset) };
     }
 
-    virtual constexpr void emitCode(std::ostream &out) final override
+    virtual void emitCode(std::ostream &) final override
     {
-      throw std::runtime_error("Cannot generate assembly for pseudoregister");
+      throw CodeEmissionError(toString());
     }
 
     virtual constexpr void
     prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
-      out << "PseudoRegister: " << getIdentifier();
+      out << toString();
     }
 
     virtual ~PseudoRegisterAssemblyASTNode() final override = default;
@@ -216,7 +239,7 @@ namespace SC2 {
 
   struct InstructionAssemblyASTNode: public AssemblyASTNode
   {
-    [[nodiscard]] virtual constexpr ReplacePseudoRegistersResult<
+    [[nodiscard]] virtual ReplacePseudoRegistersResult<
       InstructionAssemblyASTNode>
     replacePseudoRegisters(ReplacePseudoRegistersInput &&input)
     {
@@ -224,18 +247,17 @@ namespace SC2 {
       return ReplacePseudoRegistersResult<InstructionAssemblyASTNode>{
         offset,
         std::move(map),
-        std::dynamic_pointer_cast<InstructionAssemblyASTNode>(
-          std::move(shared_from_this())
+        std::dynamic_pointer_cast<InstructionAssemblyASTNode>(shared_from_this()
         )
       };
     }
 
-    [[nodiscard]] virtual constexpr std::vector<
+    [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
     fixUp()
     {
       return { std::dynamic_pointer_cast<InstructionAssemblyASTNode>(
-        std::move(shared_from_this())
+        shared_from_this()
       ) };
     }
 
@@ -266,7 +288,7 @@ namespace SC2 {
       return destination;
     }
 
-    [[nodiscard]] virtual constexpr ReplacePseudoRegistersResult<
+    [[nodiscard]] virtual ReplacePseudoRegistersResult<
       InstructionAssemblyASTNode>
     replacePseudoRegisters(ReplacePseudoRegistersInput &&input) final override
     {
@@ -285,9 +307,9 @@ namespace SC2 {
                ) };
     }
 
-    [[nodiscard]] virtual constexpr std::vector<
+    [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
-    fixUp()
+    fixUp() override
     {
       auto const &stack_source{
         std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(getSource())
@@ -308,11 +330,11 @@ namespace SC2 {
         };
       } else
         return { std::dynamic_pointer_cast<InstructionAssemblyASTNode>(
-          std::move(shared_from_this())
+          shared_from_this()
         ) };
     }
 
-    virtual constexpr void emitCode(std::ostream &out) final override
+    virtual void emitCode(std::ostream &out) final override
     {
       Utility::indent(out, 2);
       out << "movl ";
@@ -322,10 +344,8 @@ namespace SC2 {
       out << '\n';
     }
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       Utility::indent(out, indent_level);
       out << "Instruction: Mov (";
@@ -412,7 +432,7 @@ namespace SC2 {
       return operand;
     }
 
-    [[nodiscard]] virtual constexpr ReplacePseudoRegistersResult<
+    [[nodiscard]] virtual ReplacePseudoRegistersResult<
       InstructionAssemblyASTNode>
     replacePseudoRegisters(ReplacePseudoRegistersInput &&input) final override
     {
@@ -427,7 +447,7 @@ namespace SC2 {
                ) };
     }
 
-    virtual constexpr void emitCode(std::ostream &out) final override
+    virtual void emitCode(std::ostream &out) final override
     {
       getUnaryOperator()->emitCode(out);
       out << ' ';
@@ -435,10 +455,8 @@ namespace SC2 {
       out << '\n';
     }
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       Utility::indent(out, indent_level);
       out << "Instruction: Unary (";
@@ -534,8 +552,7 @@ namespace SC2 {
       return instructions;
     }
 
-    [[nodiscard]] constexpr ReplacePseudoRegistersResult<
-      FunctionAssemblyASTNode>
+    [[nodiscard]] ReplacePseudoRegistersResult<FunctionAssemblyASTNode>
     replacePseudoRegisters(ReplacePseudoRegistersInput &&input)
     {
       std::vector<std::shared_ptr<InstructionAssemblyASTNode>>
@@ -639,16 +656,14 @@ namespace SC2 {
       );
     }
 
-    virtual constexpr void emitCode(std::ostream &out) final override
+    virtual void emitCode(std::ostream &out) final override
     {
       getFunction()->emitCode(out);
       Utility::emitAssemblyEpilogue(out);
     }
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       out << "Program:\n";
       getFunction()->prettyPrintHelper(out, indent_level + 2);

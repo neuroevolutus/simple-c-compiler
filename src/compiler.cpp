@@ -11,6 +11,7 @@
 #include <iostream>
 #include <optional>
 #include <print>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>

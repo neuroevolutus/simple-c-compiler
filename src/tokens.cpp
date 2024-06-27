@@ -125,4 +125,82 @@ namespace SC2 {
     else
       throw TokenConversionError(*this, "decrement");
   }
+
+  [[nodiscard]] std::shared_ptr<PlusSignToken> Token::getPlusSign() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<PlusSignToken>(token) }; ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "plus sign");
+  }
+
+  [[nodiscard]] std::shared_ptr<AsteriskToken> Token::getAsterisk() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<AsteriskToken>(token) }; ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "asterisk");
+  }
+
+  [[nodiscard]] std::shared_ptr<ForwardSlashToken>
+  Token::getForwardSlash() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<ForwardSlashToken>(token) };
+        ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "forward slash");
+  }
+
+  [[nodiscard]] std::shared_ptr<PercentSignToken> Token::getPercentSign() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<PercentSignToken>(token) };
+        ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "percent sign");
+  }
+
+  [[nodiscard]] std::shared_ptr<BitwiseAndToken> Token::getBitwiseAnd() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<BitwiseAndToken>(token) };
+        ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "bitwise and");
+  }
+
+  [[nodiscard]] std::shared_ptr<BitwiseOrToken> Token::getBitwiseOr() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<BitwiseOrToken>(token) }; ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "bitwise or");
+  }
+
+  [[nodiscard]] std::shared_ptr<BitwiseXorToken> Token::getBitwiseXor() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<BitwiseXorToken>(token) };
+        ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "bitwise xor");
+  }
+
+  [[nodiscard]] std::shared_ptr<LeftShiftToken> Token::getLeftShift() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<LeftShiftToken>(token) }; ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "left shift");
+  }
+
+  [[nodiscard]] std::shared_ptr<RightShiftToken> Token::getRightShift() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<RightShiftToken>(token) };
+        ptr)
+      return ptr;
+    else
+      throw TokenConversionError(*this, "right shift");
+  }
 } // namespace SC2

@@ -18,7 +18,8 @@ namespace SC2 {
       }
     }
 
-    static constexpr void emitAssemblyEpilogue(std::ostream &out)
+    static constexpr void
+    emitAssemblyEpilogue([[maybe_unused]] std::ostream &out)
     {
 #if defined(__linux__)
       out << R"(.section .note.GNU-stack,"",@progbits)";

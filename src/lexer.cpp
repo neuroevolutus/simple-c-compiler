@@ -41,4 +41,49 @@ namespace SC2 {
     "^--",
     std::regex::ECMAScript | std::regex::optimize
   );
+
+  std::regex Lexer::plus_sign_regex(
+    "^\\+",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::asterisk_regex(
+    "^\\*",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::forward_slash_regex(
+    "^/",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::percent_sign_regex(
+    "^%",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::bitwise_and_regex(
+    "^&",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::bitwise_or_regex(
+    "^\\|",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::bitwise_xor_regex(
+    "^\\^",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::left_shift_regex(
+    "^<<",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::right_shift_regex(
+    "^>>",
+    std::regex::ECMAScript | std::regex::optimize
+  );
 } // namespace SC2

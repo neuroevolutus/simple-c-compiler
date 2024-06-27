@@ -184,4 +184,88 @@ TEST_CASE("lexer behaves correctly")
       REQUIRE(*tokens[4].getIdentifier() == SC2::IdentifierToken("hello"));
     }
   }
+  SECTION("Chapter 3")
+  {
+    SECTION("plus signs are correctly lexed")
+    {
+      SC2::Lexer              lexer{ "+++" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getPlusSign() == SC2::PlusSignToken{});
+      REQUIRE(*tokens[1].getPlusSign() == SC2::PlusSignToken{});
+      REQUIRE(*tokens[2].getPlusSign() == SC2::PlusSignToken{});
+    }
+    SECTION("asterisks are correctly lexed")
+    {
+      SC2::Lexer              lexer{ "***" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getAsterisk() == SC2::AsteriskToken{});
+      REQUIRE(*tokens[1].getAsterisk() == SC2::AsteriskToken{});
+      REQUIRE(*tokens[2].getAsterisk() == SC2::AsteriskToken{});
+    }
+    SECTION("forward slashes are correctly lexed")
+    {
+      SC2::Lexer              lexer{ "///" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getForwardSlash() == SC2::ForwardSlashToken{});
+      REQUIRE(*tokens[1].getForwardSlash() == SC2::ForwardSlashToken{});
+      REQUIRE(*tokens[2].getForwardSlash() == SC2::ForwardSlashToken{});
+    }
+    SECTION("percent signs are correctly lexed")
+    {
+      SC2::Lexer              lexer{ "%%%" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getPercentSign() == SC2::PercentSignToken{});
+      REQUIRE(*tokens[1].getPercentSign() == SC2::PercentSignToken{});
+      REQUIRE(*tokens[2].getPercentSign() == SC2::PercentSignToken{});
+    }
+    SECTION("bitwise and is correctly lexed")
+    {
+      SC2::Lexer              lexer{ "&&&" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getBitwiseAnd() == SC2::BitwiseAndToken{});
+      REQUIRE(*tokens[1].getBitwiseAnd() == SC2::BitwiseAndToken{});
+      REQUIRE(*tokens[2].getBitwiseAnd() == SC2::BitwiseAndToken{});
+    }
+    SECTION("bitwise or is correctly lexed")
+    {
+      SC2::Lexer              lexer{ "|||" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getBitwiseOr() == SC2::BitwiseOrToken{});
+      REQUIRE(*tokens[1].getBitwiseOr() == SC2::BitwiseOrToken{});
+      REQUIRE(*tokens[2].getBitwiseOr() == SC2::BitwiseOrToken{});
+    }
+    SECTION("bitwise xor is correctly lexed")
+    {
+      SC2::Lexer              lexer{ "^^^" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getBitwiseXor() == SC2::BitwiseXorToken{});
+      REQUIRE(*tokens[1].getBitwiseXor() == SC2::BitwiseXorToken{});
+      REQUIRE(*tokens[2].getBitwiseXor() == SC2::BitwiseXorToken{});
+    }
+    SECTION("left shifts are correctly lexed")
+    {
+      SC2::Lexer              lexer{ "<< << <<" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getLeftShift() == SC2::LeftShiftToken{});
+      REQUIRE(*tokens[1].getLeftShift() == SC2::LeftShiftToken{});
+      REQUIRE(*tokens[2].getLeftShift() == SC2::LeftShiftToken{});
+    }
+    SECTION("right shifts are correctly lexed")
+    {
+      SC2::Lexer              lexer{ ">> >> >>" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getRightShift() == SC2::RightShiftToken{});
+      REQUIRE(*tokens[1].getRightShift() == SC2::RightShiftToken{});
+      REQUIRE(*tokens[2].getRightShift() == SC2::RightShiftToken{});
+    }
+  }
 }

@@ -106,10 +106,8 @@ namespace SC2 {
       std::shared_ptr<InstructionAssemblyASTNode>>
     emitAssembly() const final override;
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       Utility::indent(out, indent_level);
       out << "Return(";
@@ -208,10 +206,8 @@ namespace SC2 {
       return destination;
     }
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       Utility::indent(out, indent_level);
       out << "Unary(";
@@ -287,10 +283,8 @@ namespace SC2 {
 
     [[nodiscard]] std::shared_ptr<ProgramAssemblyASTNode> emitAssembly() const;
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       getFunction()->prettyPrintHelper(out, indent_level);
     }

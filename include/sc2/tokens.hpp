@@ -4,6 +4,7 @@
 #include <sc2/compiler_error.hpp>
 #include <string_view>
 
+#include <compare>
 #include <format>
 #include <memory>
 #include <string>
@@ -200,52 +201,222 @@ namespace SC2 {
     virtual ~RightCurlyBraceToken() final override = default;
   };
 
-  struct SemicolonToken: public BasicToken
+  struct SemicolonToken final: public BasicToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "semicolon";
     }
-    constexpr auto operator<=>(SemicolonToken const &) const = default;
+
+    constexpr auto operator<=>(SemicolonToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
 
     virtual ~SemicolonToken() final override = default;
   };
 
-  struct TildeToken: public BasicToken
+  struct TildeToken final: public BasicToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "tilde";
     }
-    constexpr auto operator<=>(TildeToken const &) const = default;
+
+    constexpr auto operator<=>(TildeToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
 
     virtual ~TildeToken() final override = default;
   };
 
-  struct HyphenToken: public BasicToken
+  struct HyphenToken final: public BasicToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "hyphen";
     }
-    constexpr auto operator<=>(HyphenToken const &) const = default;
+
+    constexpr auto operator<=>(HyphenToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
 
     virtual ~HyphenToken() final override = default;
   };
 
-  struct DecrementToken: public BasicToken
+  struct DecrementToken final: public BasicToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "decrement";
     }
-    constexpr auto operator<=>(DecrementToken const &) const = default;
+
+    constexpr auto operator<=>(DecrementToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
 
     virtual ~DecrementToken() final override = default;
+  };
+
+  struct PlusSignToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "plus sign";
+    }
+
+    constexpr auto operator<=>(PlusSignToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~PlusSignToken() final override = default;
+  };
+
+  struct AsteriskToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "asterisk";
+    }
+
+    constexpr auto operator<=>(AsteriskToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~AsteriskToken() final override = default;
+  };
+
+  struct ForwardSlashToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "forward slash";
+    }
+
+    constexpr auto operator<=>(ForwardSlashToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~ForwardSlashToken() final override = default;
+  };
+
+  struct PercentSignToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "percent sign";
+    }
+
+    constexpr auto operator<=>(PercentSignToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~PercentSignToken() final override = default;
+  };
+
+  struct BitwiseToken: public BasicToken
+  {
+    virtual ~BitwiseToken() override = default;
+  };
+
+  struct BitwiseAndToken final: public BitwiseToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "bitwise and";
+    }
+
+    constexpr auto operator<=>(BitwiseAndToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~BitwiseAndToken() final override = default;
+  };
+
+  struct BitwiseOrToken final: public BitwiseToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "bitwise or";
+    }
+
+    constexpr auto operator<=>(BitwiseOrToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~BitwiseOrToken() final override = default;
+  };
+
+  struct BitwiseXorToken final: public BitwiseToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "bitwise xor";
+    }
+
+    constexpr auto operator<=>(BitwiseXorToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~BitwiseXorToken() final override = default;
+  };
+
+  struct ShiftToken: public BasicToken
+  {
+    virtual ~ShiftToken() override = default;
+  };
+
+  struct LeftShiftToken final: public ShiftToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "left shift";
+    }
+
+    constexpr auto operator<=>(LeftShiftToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~LeftShiftToken() final override = default;
+  };
+
+  struct RightShiftToken final: public ShiftToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "right shift";
+    }
+
+    constexpr auto operator<=>(RightShiftToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~RightShiftToken() final override = default;
   };
 
   class Token
@@ -314,6 +485,15 @@ namespace SC2 {
     [[nodiscard]] std::shared_ptr<TildeToken>       getTilde() const;
     [[nodiscard]] std::shared_ptr<HyphenToken>      getHyphen() const;
     [[nodiscard]] std::shared_ptr<DecrementToken>   getDecrement() const;
+    [[nodiscard]] std::shared_ptr<PlusSignToken>    getPlusSign() const;
+    [[nodiscard]] std::shared_ptr<AsteriskToken>    getAsterisk() const;
+    [[nodiscard]] std::shared_ptr<ForwardSlashToken> getForwardSlash() const;
+    [[nodiscard]] std::shared_ptr<PercentSignToken>  getPercentSign() const;
+    [[nodiscard]] std::shared_ptr<BitwiseAndToken>   getBitwiseAnd() const;
+    [[nodiscard]] std::shared_ptr<BitwiseOrToken>    getBitwiseOr() const;
+    [[nodiscard]] std::shared_ptr<BitwiseXorToken>   getBitwiseXor() const;
+    [[nodiscard]] std::shared_ptr<LeftShiftToken>    getLeftShift() const;
+    [[nodiscard]] std::shared_ptr<RightShiftToken>   getRightShift() const;
   };
 
   class TokenConversionError final: public CompilerError

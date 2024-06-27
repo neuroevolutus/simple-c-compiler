@@ -20,8 +20,8 @@ namespace SC2 {
     virtual ~ASTNode() = default;
   };
 
-  class InstructionTACKYASTNode;
-  class ValueTACKYASTNode;
+  struct InstructionTACKYASTNode;
+  struct ValueTACKYASTNode;
   struct ExpressionASTNode: public ASTNode
   {
     [[nodiscard]] virtual std::pair<
@@ -114,10 +114,8 @@ namespace SC2 {
       emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
         const final override;
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       getUnaryOperator()->prettyPrintHelper(out, indent_level);
       out << '(';
@@ -128,7 +126,7 @@ namespace SC2 {
     virtual ~UnaryExpressionASTNode() final override = default;
   };
 
-  class LiteralConstantASTNode: public ExpressionASTNode
+  class LiteralConstantASTNode final: public ExpressionASTNode
   {
     int const value{};
 
@@ -170,10 +168,8 @@ namespace SC2 {
     [[nodiscard]] std::vector<std::shared_ptr<InstructionTACKYASTNode>>
       emitTACKY(std::string_view) const;
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       Utility::indent(out, indent_level);
       out << "return ";
@@ -212,10 +208,8 @@ namespace SC2 {
 
     [[nodiscard]] std::shared_ptr<FunctionTACKYASTNode> emitTACKY() const;
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       Utility::indent(out, indent_level);
       out << "int " << getIdentifier() << "(void) {\n";
@@ -243,10 +237,8 @@ namespace SC2 {
 
     [[nodiscard]] std::shared_ptr<ProgramTACKYASTNode> emitTACKY() const;
 
-    virtual constexpr void prettyPrintHelper(
-      std::ostream &out,
-      std::size_t   indent_level
-    ) final override
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
     {
       getFunction()->prettyPrintHelper(out, indent_level);
     }

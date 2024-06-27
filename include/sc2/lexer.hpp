@@ -63,6 +63,15 @@ namespace SC2 {
     static std::regex tilde_regex;
     static std::regex hyphen_regex;
     static std::regex decrement_regex;
+    static std::regex plus_sign_regex;
+    static std::regex asterisk_regex;
+    static std::regex forward_slash_regex;
+    static std::regex percent_sign_regex;
+    static std::regex bitwise_and_regex;
+    static std::regex bitwise_or_regex;
+    static std::regex bitwise_xor_regex;
+    static std::regex left_shift_regex;
+    static std::regex right_shift_regex;
 
     std::string program_text{};
     Token       current_token;
@@ -136,6 +145,15 @@ namespace SC2 {
         std::cmatch tilde_regex_match{};
         std::cmatch hyphen_regex_match{};
         std::cmatch decrement_regex_match{};
+        std::cmatch plus_sign_regex_match{};
+        std::cmatch asterisk_regex_match{};
+        std::cmatch forward_slash_regex_match{};
+        std::cmatch percent_sign_regex_match{};
+        std::cmatch bitwise_and_regex_match{};
+        std::cmatch bitwise_or_regex_match{};
+        std::cmatch bitwise_xor_regex_match{};
+        std::cmatch left_shift_regex_match{};
+        std::cmatch right_shift_regex_match{};
         std::regex_search(
           program_text.c_str(),
           program_text.c_str() + program_text.size(),
@@ -184,7 +202,61 @@ namespace SC2 {
           decrement_regex_match,
           decrement_regex
         );
-        std::array<std::cmatch::difference_type, 8> const match_sizes{
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          plus_sign_regex_match,
+          plus_sign_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          asterisk_regex_match,
+          asterisk_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          forward_slash_regex_match,
+          forward_slash_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          percent_sign_regex_match,
+          percent_sign_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          bitwise_and_regex_match,
+          bitwise_and_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          bitwise_or_regex_match,
+          bitwise_or_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          bitwise_xor_regex_match,
+          bitwise_xor_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          left_shift_regex_match,
+          left_shift_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          right_shift_regex_match,
+          right_shift_regex
+        );
+        std::array<std::cmatch::difference_type, 17> const match_sizes{
           identifier_regex_match.length(),
           literal_constant_regex_match.length(),
           parenthesis_regex_match.length(),
@@ -192,7 +264,16 @@ namespace SC2 {
           semicolon_regex_match.length(),
           tilde_regex_match.length(),
           hyphen_regex_match.length(),
-          decrement_regex_match.length()
+          decrement_regex_match.length(),
+          plus_sign_regex_match.length(),
+          asterisk_regex_match.length(),
+          forward_slash_regex_match.length(),
+          percent_sign_regex_match.length(),
+          bitwise_and_regex_match.length(),
+          bitwise_or_regex_match.length(),
+          bitwise_xor_regex_match.length(),
+          left_shift_regex_match.length(),
+          right_shift_regex_match.length()
         };
         std::cmatch::difference_type const largest_match_size{
           match_sizes[std::ranges::distance(
@@ -261,6 +342,24 @@ namespace SC2 {
           current_token = Token(std::make_shared<HyphenToken>());
         } else if (decrement_regex_match.length() == largest_match_size) {
           current_token = Token(std::make_shared<DecrementToken>());
+        } else if (plus_sign_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<PlusSignToken>());
+        } else if (asterisk_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<AsteriskToken>());
+        } else if (forward_slash_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<ForwardSlashToken>());
+        } else if (percent_sign_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<PercentSignToken>());
+        } else if (bitwise_and_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<BitwiseAndToken>());
+        } else if (bitwise_or_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<BitwiseOrToken>());
+        } else if (bitwise_xor_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<BitwiseXorToken>());
+        } else if (left_shift_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<LeftShiftToken>());
+        } else if (right_shift_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<RightShiftToken>());
         } else
           std::unreachable();
         program_text.erase(0, largest_match_size);
