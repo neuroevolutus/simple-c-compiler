@@ -50,4 +50,27 @@ TEST_CASE("tacky emitter behaves correctly")
       "  Return(Variable(\"main.2\"))\n"
     );
   }
+  SECTION("Chapter 3: a program with binary expressions is correctly translated"
+  )
+  {
+    constexpr char const * const program_text_zero{
+      "int main(void) {\n"
+      " return ~12 * 4;\n"
+      "}"
+    };
+    SC2::Lexer                           lexer_zero{ program_text_zero };
+    SC2::Parser                          parser_zero{ lexer_zero };
+    std::shared_ptr<SC2::ProgramASTNode> program_ast_zero{
+      parser_zero.parseProgram()
+    };
+    std::shared_ptr<SC2::TACKYASTNode> tacky_ast_zero{
+      program_ast_zero->emitTACKY()
+    };
+    REQUIRE(tacky_ast_zero->prettyPrint() ==
+      "Function: main\n"
+      "  Unary(Complement, LiteralConstant(12), Variable(\"main.3\"))\n"
+      "  Binary(Multiply, Variable(\"main.3\"), LiteralConstant(4), Variable(\"main.4\"))\n"
+      "  Return(Variable(\"main.4\"))\n"
+    );
+  }
 }

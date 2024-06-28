@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <ranges>
+#include <stdexcept>
 #include <vector>
 
 namespace SC2 {
@@ -56,6 +57,12 @@ namespace SC2 {
         destinationAssembly
       )
     };
+  }
+
+  [[nodiscard]] std::vector<std::shared_ptr<InstructionAssemblyASTNode>>
+  BinaryTACKYASTNode::emitAssembly() const
+  {
+    throw std::runtime_error("Unimplemented");
   }
 
   [[nodiscard]] std::shared_ptr<FunctionAssemblyASTNode>

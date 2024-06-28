@@ -12,6 +12,7 @@
 #include <iterator>
 #include <memory>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -220,6 +221,210 @@ namespace SC2 {
     }
 
     virtual ~UnaryTACKYASTNode() final override = default;
+  };
+
+  class BinaryOperatorAssemblyASTNode;
+  class BinaryOperatorTACKYASTNode: public TACKYASTNode
+  {
+    protected:
+    virtual void printBinaryOperator(std::ostream &) = 0;
+
+    public:
+    [[nodiscard]] virtual std::shared_ptr<BinaryOperatorAssemblyASTNode>
+    emitAssembly() const {
+      throw std::runtime_error("Unimplemented");
+    }
+
+    constexpr virtual void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      printBinaryOperator(out);
+    }
+
+    virtual ~BinaryOperatorTACKYASTNode() override = default;
+  };
+
+  class AddTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "Add";
+    }
+
+    public:
+    virtual ~AddTACKYASTNode() final override = default;
+  };
+
+  class SubtractTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "Subtract";
+    }
+
+    public:
+    virtual ~SubtractTACKYASTNode() final override = default;
+  };
+
+  class MultiplyTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "Multiply";
+    }
+
+    public:
+    virtual ~MultiplyTACKYASTNode() final override = default;
+  };
+
+  class DivideTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "Divide";
+    }
+
+    public:
+    virtual ~DivideTACKYASTNode() final override = default;
+  };
+
+  class ModuloTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "Modulo";
+    }
+
+    public:
+    virtual ~ModuloTACKYASTNode() final override = default;
+  };
+
+  class BitwiseAndTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "BitwiseAnd";
+    }
+
+    public:
+    virtual ~BitwiseAndTACKYASTNode() final override = default;
+  };
+
+  class BitwiseOrTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "BitwiseOr";
+    }
+
+    public:
+    virtual ~BitwiseOrTACKYASTNode() final override = default;
+  };
+
+  class BitwiseXorTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "BitwiseXor";
+    }
+
+    public:
+    virtual ~BitwiseXorTACKYASTNode() final override = default;
+  };
+
+  class LeftShiftTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "LeftShift";
+    }
+
+    public:
+    virtual ~LeftShiftTACKYASTNode() final override = default;
+  };
+
+  class RightShiftTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printBinaryOperator(std::ostream &out) final override
+    {
+      out << "RightShift";
+    }
+
+    public:
+    virtual ~RightShiftTACKYASTNode() final override = default;
+  };
+
+  class BinaryTACKYASTNode final: public InstructionTACKYASTNode
+  {
+    std::shared_ptr<BinaryOperatorTACKYASTNode> binary_operator{};
+    std::shared_ptr<ValueTACKYASTNode>          left_operand{};
+    std::shared_ptr<ValueTACKYASTNode>          right_operand{};
+    std::shared_ptr<VariableTACKYASTNode>       destination{};
+
+    public:
+    BinaryTACKYASTNode(
+      std::shared_ptr<BinaryOperatorTACKYASTNode> binary_operator,
+      std::shared_ptr<ValueTACKYASTNode>          left_operand,
+      std::shared_ptr<ValueTACKYASTNode>          right_operand,
+      std::shared_ptr<VariableTACKYASTNode>       destination
+    )
+      : binary_operator{ binary_operator }
+      , left_operand{ left_operand }
+      , right_operand{ right_operand }
+      , destination{ destination }
+    {}
+
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly() const final override;
+
+    [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+    getBinaryOperator() const
+    {
+      return binary_operator;
+    }
+
+    [[nodiscard]] std::shared_ptr<ValueTACKYASTNode> getLeftOperand() const
+    {
+      return left_operand;
+    }
+
+    [[nodiscard]] std::shared_ptr<ValueTACKYASTNode> getRightOperand() const
+    {
+      return right_operand;
+    }
+
+    [[nodiscard]] std::shared_ptr<VariableTACKYASTNode> getDestination() const
+    {
+      return destination;
+    }
+
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
+    {
+      Utility::indent(out, indent_level);
+      out << "Binary(";
+      getBinaryOperator()->prettyPrintHelper(out, indent_level);
+      out << ", ";
+      getLeftOperand()->prettyPrintHelper(out, indent_level);
+      out << ", ";
+      getRightOperand()->prettyPrintHelper(out, indent_level);
+      out << ", ";
+      getDestination()->prettyPrintHelper(out, indent_level);
+      out << ")\n";
+    }
+
+    virtual ~BinaryTACKYASTNode() final override = default;
   };
 
   class FunctionAssemblyASTNode;

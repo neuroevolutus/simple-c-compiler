@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -114,14 +115,12 @@ namespace SC2 {
       , expression{ expression }
     {}
 
-    [[nodiscard]] std::shared_ptr<UnaryOperatorASTNode>
-    getUnaryOperator() const noexcept
+    [[nodiscard]] std::shared_ptr<UnaryOperatorASTNode> getUnaryOperator() const
     {
       return unary_operator;
     }
 
-    [[nodiscard]] std::shared_ptr<ExpressionASTNode>
-    getExpression() const noexcept
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode> getExpression() const
     {
       return expression;
     }
@@ -141,8 +140,11 @@ namespace SC2 {
     virtual ~UnaryExpressionASTNode() final override = default;
   };
 
+  class BinaryOperatorTACKYASTNode;
   struct BinaryOperatorASTNode: public ASTNode
   {
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode> emitTACKY() const = 0;
+
     virtual ~BinaryOperatorASTNode() override = default;
   };
 
@@ -153,6 +155,9 @@ namespace SC2 {
     {
       out << '+';
     }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
 
     virtual ~AddASTNode() final override = default;
   };
@@ -165,6 +170,9 @@ namespace SC2 {
       out << '-';
     }
 
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
     virtual ~SubtractASTNode() final override = default;
   };
 
@@ -175,6 +183,9 @@ namespace SC2 {
     {
       out << '*';
     }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
 
     virtual ~MultiplyASTNode() final override = default;
   };
@@ -187,6 +198,9 @@ namespace SC2 {
       out << '/';
     }
 
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
     virtual ~DivideASTNode() final override = default;
   };
 
@@ -197,6 +211,9 @@ namespace SC2 {
     {
       out << '%';
     }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
 
     virtual ~ModuloASTNode() final override = default;
   };
@@ -209,6 +226,9 @@ namespace SC2 {
       out << '&';
     }
 
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
     virtual ~BitwiseAndASTNode() final override = default;
   };
 
@@ -219,6 +239,9 @@ namespace SC2 {
     {
       out << '|';
     }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
 
     virtual ~BitwiseOrASTNode() final override = default;
   };
@@ -231,6 +254,9 @@ namespace SC2 {
       out << '^';
     }
 
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
     virtual ~BitwiseXorASTNode() final override = default;
   };
 
@@ -242,6 +268,9 @@ namespace SC2 {
       out << "<<";
     }
 
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
     virtual ~LeftShiftASTNode() final override = default;
   };
 
@@ -252,6 +281,9 @@ namespace SC2 {
     {
       out << ">>";
     }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
 
     virtual ~RightShiftASTNode() final override = default;
   };
@@ -272,6 +304,22 @@ namespace SC2 {
       , left_operand{ left_operand }
       , right_operand{ right_operand }
     {}
+
+    [[nodiscard]] std::shared_ptr<BinaryOperatorASTNode>
+    getBinaryOperator() const
+    {
+      return binary_operator;
+    }
+
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode> getLeftOperand() const
+    {
+      return left_operand;
+    }
+
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode> getRightOperand() const
+    {
+      return right_operand;
+    }
 
     [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
       emitTACKY(ExpressionASTNodeEmitTACKYInput) const final override;
