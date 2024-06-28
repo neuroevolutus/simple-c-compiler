@@ -96,17 +96,17 @@ TEST_CASE("lexer behaves correctly")
       REQUIRE_THROWS_MATCHES(
         SC2::Lexer{ "1234a" },
         SC2::LexerInvalidTokenError,
-        Catch::Matchers::Message("Lexer error: Invalid token: 1234a")
+        Catch::Matchers::Message("Lexer error: invalid token: 1234a")
       );
       REQUIRE_THROWS_MATCHES(
         SC2::Lexer{ "1234A" },
         SC2::LexerInvalidTokenError,
-        Catch::Matchers::Message("Lexer error: Invalid token: 1234A")
+        Catch::Matchers::Message("Lexer error: invalid token: 1234A")
       );
       REQUIRE_THROWS_MATCHES(
         SC2::Lexer{ "1234_" },
         SC2::LexerInvalidTokenError,
-        Catch::Matchers::Message("Lexer error: Invalid token: 1234_")
+        Catch::Matchers::Message("Lexer error: invalid token: 1234_")
       );
     }
     SECTION("parentheses are correctly lexed")

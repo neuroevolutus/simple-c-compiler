@@ -32,7 +32,7 @@ TEST_CASE("parser behaves correctly")
         SC2::ParserNonTerminalError,
         Catch::Matchers::Message(
           "Parser error: invalid non-terminal <program>:\n"
-          "Parser error: Extraneous token: (Identifier: d)"
+          "Parser error: extraneous token: (Identifier: d)"
         )
       );
     }
@@ -70,7 +70,7 @@ TEST_CASE("parser behaves correctly")
         Catch::Matchers::Message(
           "Parser error: invalid non-terminal <program>:\n"
           "Parser error: invalid non-terminal <function>:\n"
-          "Parser error: Cannot create (identifier) from (Keyword: return)"
+          "Parser error: cannot create (identifier) from (Keyword: return)"
         )
       );
       constexpr char const * const invalid_program_text_one{
@@ -87,7 +87,7 @@ TEST_CASE("parser behaves correctly")
           "Parser error: invalid non-terminal <program>:\n"
           "Parser error: invalid non-terminal <function>:\n"
           "Parser error: invalid non-terminal <statement>:\n"
-          "Parser error: Expected (semicolon) but got (right parenthesis)"
+          "Parser error: expected (semicolon) but got (right parenthesis)"
         )
       );
       constexpr char const * const invalid_program_text_two{
@@ -103,7 +103,7 @@ TEST_CASE("parser behaves correctly")
         Catch::Matchers::Message(
           "Parser error: invalid non-terminal <program>:\n"
           "Parser error: invalid non-terminal <function>:\n"
-          "Lexer error: Invalid token: <"
+          "Lexer error: invalid token: <"
         )
       );
     }
@@ -153,8 +153,55 @@ TEST_CASE("parser behaves correctly")
           "Parser error: invalid non-terminal <function>:\n"
           "Parser error: invalid non-terminal <statement>:\n"
           "Parser error: invalid non-terminal <expression>:\n"
-          "Parser error: invalid non-terminal <expression>:\n"
+          "Parser error: invalid non-terminal <factor>:\n"
+          "Parser error: invalid non-terminal <factor>:\n"
           "Parser error: unmatched parentheses"
+        )
+      );
+    }
+  }
+  SECTION("Chapter 3")
+  {
+    SECTION("a program with binary expressions is correctly parsed")
+    {
+      constexpr char const * const program_text{
+        "int main(void) {\n"
+        "  return 2 * 3 / 5 % 7 + 4 << 3 & 7 | 8 ^ 9 | 5 & 3 >> 6 + 8 * 2 * (1 "
+        "+ 2 % 2 + 3 & 2) + (3 * 5) - 1;\n"
+        "}\n"
+      };
+      constexpr char const * const prettified_program_text{
+        "int main(void) {\n"
+        "  return ((((((((2 * 3) / 5) % 7) + 4) << 3) & 7) | (8 ^ 9)) | (5 & "
+        "(3 >> (((6 + ((8 * 2) * (((1 + (2 % 2)) + 3) & 2))) + (3 * 5)) - "
+        "1))));\n"
+        "}\n"
+      };
+      SC2::Lexer                           lexer{ program_text };
+      SC2::Parser                          parser{ lexer };
+      std::shared_ptr<SC2::ProgramASTNode> program_ast{ parser.parseProgram() };
+      REQUIRE(program_ast->prettyPrint() == prettified_program_text);
+    }
+    SECTION("a program with with invalid binary expressions is not parsed")
+    {
+      constexpr char const * const program_text{
+        "int main(void) {\n"
+        "  return 3 * + 4;"
+        "}\n"
+      };
+      SC2::Lexer  lexer{ program_text };
+      SC2::Parser parser{ lexer };
+      REQUIRE_THROWS_MATCHES(
+        parser.parseProgram(),
+        SC2::ParserNonTerminalError,
+        Catch::Matchers::Message(
+          "Parser error: invalid non-terminal <program>:\n"
+          "Parser error: invalid non-terminal <function>:\n"
+          "Parser error: invalid non-terminal <statement>:\n"
+          "Parser error: invalid non-terminal <expression>:\n"
+          "Parser error: invalid non-terminal <expression>:\n"
+          "Parser error: invalid non-terminal <factor>:\n"
+          "Parser error: expected (left parenthesis) but got (plus sign)"
         )
       );
     }

@@ -33,7 +33,7 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 
-add_library(compiler src/ast.cpp src/lexer.cpp src/tacky_ast.cpp src/tokens.cpp)
+add_library(compiler src/ast.cpp src/lexer.cpp src/parser.cpp src/tacky_ast.cpp src/tokens.cpp)
 target_include_directories(compiler
   PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

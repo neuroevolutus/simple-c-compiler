@@ -49,7 +49,7 @@ namespace SC2 {
     public:
     ParserTokenCreationError(TokenConversionError const &error)
       : message{ std::format(
-          "Parser error: Cannot create ({}) from ({})",
+          "Parser error: cannot create ({}) from ({})",
           error.getDestinationTokenType(),
           error.getSourceToken().toString()
         ) }
@@ -70,7 +70,7 @@ namespace SC2 {
     public:
     ParserTokenExpectationError(Token expected_token, Token actual_token)
       : message{ std::format(
-          "Parser error: Expected ({}) but got ({})",
+          "Parser error: expected ({}) but got ({})",
           expected_token.toString(),
           actual_token.toString()
         ) }
@@ -115,7 +115,7 @@ namespace SC2 {
     public:
     ParserExtraneousTokenError(Token token)
       : message{
-        std::format("Parser error: Extraneous token: ({})", token.toString())
+        std::format("Parser error: extraneous token: ({})", token.toString())
       }
     {}
 
@@ -216,41 +216,77 @@ namespace SC2 {
       );
     }
 
+    [[nodiscard]] std::shared_ptr<UnaryOperatorASTNode> parseUnaryOperator()
+    {
+      if (Token const next_token{ parseNextToken() }; next_token.isTilde())
+        return std::make_shared<ComplementASTNode>();
+      else if (next_token.isHyphen())
+        return std::make_shared<NegateASTNode>();
+      else
+        std::unreachable();
+    }
+
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode> parseFactor();
+
     [[nodiscard]] std::shared_ptr<UnaryExpressionASTNode> parseUnaryExpression()
     {
-      Token                                 next_token{ parseNextToken() };
-      std::shared_ptr<UnaryOperatorASTNode> unary_operator{
-        [&]() -> std::shared_ptr<UnaryOperatorASTNode> {
-        if (next_token.isTilde())
-          return std::make_shared<ComplementASTNode>();
-        else
-          return std::make_shared<NegateASTNode>();
-      }()
+      std::shared_ptr<UnaryOperatorASTNode> const unary_operator{
+        parseUnaryOperator()
       };
-      std::shared_ptr<ExpressionASTNode> expression{ parseExpression() };
+      std::shared_ptr<ExpressionASTNode> const expression{ parseFactor() };
       return std::make_shared<UnaryExpressionASTNode>(
         unary_operator,
         expression
       );
     }
 
-    [[nodiscard]] std::shared_ptr<ExpressionASTNode> parseExpression()
+    [[nodiscard]] std::shared_ptr<BinaryOperatorASTNode> parseBinaryOperator()
+    {
+      if (Token const next_token{ parseNextToken() }; next_token.isPlusSign())
+        return std::make_shared<AddASTNode>();
+      else if (next_token.isHyphen())
+        return std::make_shared<SubtractASTNode>();
+      else if (next_token.isAsterisk())
+        return std::make_shared<MultiplyASTNode>();
+      else if (next_token.isForwardSlash())
+        return std::make_shared<DivideASTNode>();
+      else if (next_token.isPercentSign())
+        return std::make_shared<ModuloASTNode>();
+      else if (next_token.isBitwiseAnd())
+        return std::make_shared<BitwiseAndASTNode>();
+      else if (next_token.isBitwiseOr())
+        return std::make_shared<BitwiseOrASTNode>();
+      else if (next_token.isBitwiseXor())
+        return std::make_shared<BitwiseXorASTNode>();
+      else if (next_token.isLeftShift())
+        return std::make_shared<LeftShiftASTNode>();
+      else if (next_token.isRightShift())
+        return std::make_shared<RightShiftASTNode>();
+      else
+        std::unreachable();
+    }
+
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode>
+    parseExpression(std::size_t min_precedence)
     try {
-      Token nextToken{ peekNextToken() };
-      if (nextToken.isLiteralConstant()) {
-        return parseLiteralConstantExpression();
-      } else if (nextToken.isTilde() || nextToken.isHyphen()) {
-        return parseUnaryExpression();
-      } else {
-        expect(Token(std::make_shared<LeftParenthesisToken>()));
-        std::shared_ptr<ExpressionASTNode> expression{ parseExpression() };
-        try {
-          expect(Token(std::make_shared<RightParenthesisToken>()));
-        } catch (...) {
-          throw ParserUnmatchedParenthesesError{};
-        }
-        return expression;
+      std::shared_ptr<ExpressionASTNode> left_operand{ parseFactor() };
+      Token                              next_token{ peekNextToken() };
+      while (next_token.isBinaryOperatorToken()
+             && next_token.getPrecedence() >= min_precedence) {
+        std::shared_ptr<BinaryOperatorASTNode> binary_operator{
+          parseBinaryOperator()
+        };
+        std::shared_ptr<ExpressionASTNode> right_operand{
+          parseExpression(next_token.getPrecedence() + 1)
+        };
+        left_operand = std::make_shared<BinaryExpressionASTNode>(
+          binary_operator,
+          left_operand,
+          right_operand
+        );
+        next_token = peekNextToken();
       }
+      return left_operand;
     } catch (ParserError const &error) {
       throw ParserNonTerminalError("expression", error);
     }
@@ -258,7 +294,7 @@ namespace SC2 {
     [[nodiscard]] std::shared_ptr<StatementASTNode> parseStatement()
     try {
       expect(Token(std::make_shared<ReturnKeywordToken>()));
-      auto const &expression{ parseExpression() };
+      std::shared_ptr<ExpressionASTNode> const expression{ parseExpression(0) };
       expect(Token(std::make_shared<SemicolonToken>()));
       return std::make_shared<StatementASTNode>(expression);
     } catch (ParserError const &error) {
@@ -268,12 +304,14 @@ namespace SC2 {
     [[nodiscard]] std::shared_ptr<FunctionASTNode> parseFunction()
     try {
       expect(Token(std::make_shared<IntKeywordToken>()));
-      std::shared_ptr<IdentifierToken> function_name{ parseIdentifierToken() };
+      std::shared_ptr<IdentifierToken> const function_name{
+        parseIdentifierToken()
+      };
       expect(Token(std::make_shared<LeftParenthesisToken>()));
       expect(Token(std::make_shared<VoidKeywordToken>()));
       expect(Token(std::make_shared<RightParenthesisToken>()));
       expect(Token(std::make_shared<LeftCurlyBraceToken>()));
-      auto const &statement{ parseStatement() };
+      std::shared_ptr<StatementASTNode> const statement{ parseStatement() };
       expect(Token(std::make_shared<RightCurlyBraceToken>()));
       return std::make_shared<FunctionASTNode>(
         function_name->getName(),

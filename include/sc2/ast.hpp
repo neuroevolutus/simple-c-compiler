@@ -21,46 +21,65 @@ namespace SC2 {
   };
 
   struct InstructionTACKYASTNode;
+  struct ExpressionASTNodeEmitTACKYInput
+  {
+    std::string_view                                      identifier{};
+    std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions{};
+  };
+
   struct ValueTACKYASTNode;
+  struct ExpressionASTNodeEmitTACKYOutput
+  {
+    std::shared_ptr<ValueTACKYASTNode>                    output_value{};
+    std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions{};
+  };
+
   struct ExpressionASTNode: public ASTNode
   {
-    [[nodiscard]] virtual std::pair<
-      std::shared_ptr<ValueTACKYASTNode>,
-      std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-      emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
-        const
+    [[nodiscard]] virtual ExpressionASTNodeEmitTACKYOutput
+      emitTACKY(ExpressionASTNodeEmitTACKYInput) const
       = 0;
 
     virtual ~ExpressionASTNode() override = default;
   };
 
-  class UnaryOperatorTACKYASTNode;
-  class UnaryOperatorASTNode: public ASTNode
+  class LiteralConstantASTNode final: public ExpressionASTNode
   {
-    protected:
-    virtual void printUnaryOperator(std::ostream &out) = 0;
+    int const value{};
 
     public:
-    virtual std::shared_ptr<UnaryOperatorTACKYASTNode> emitTACKY() const = 0;
+    explicit constexpr LiteralConstantASTNode(int value): value{ value } {}
 
-    constexpr virtual void
+    [[nodiscard]] constexpr int getValue() const noexcept { return value; }
+
+    [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+      emitTACKY(ExpressionASTNodeEmitTACKYInput) const final override;
+
+    virtual constexpr void
     prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
-      printUnaryOperator(out);
+      out << getValue();
     }
+
+    virtual ~LiteralConstantASTNode() final override = default;
+  };
+
+  class UnaryOperatorTACKYASTNode;
+  struct UnaryOperatorASTNode: public ASTNode
+  {
+    virtual std::shared_ptr<UnaryOperatorTACKYASTNode> emitTACKY() const = 0;
 
     virtual ~UnaryOperatorASTNode() override = default;
   };
 
-  class ComplementASTNode final: public UnaryOperatorASTNode
+  struct ComplementASTNode final: public UnaryOperatorASTNode
   {
-    protected:
-    virtual constexpr void printUnaryOperator(std::ostream &out) final override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
       out << "~";
     }
 
-    public:
     virtual std::shared_ptr<UnaryOperatorTACKYASTNode>
     emitTACKY() const final override;
 
@@ -69,13 +88,12 @@ namespace SC2 {
 
   struct NegateASTNode final: public UnaryOperatorASTNode
   {
-    protected:
-    virtual constexpr void printUnaryOperator(std::ostream &out) final override
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
       out << "-";
     }
 
-    public:
     virtual std::shared_ptr<UnaryOperatorTACKYASTNode>
     emitTACKY() const final override;
 
@@ -85,7 +103,7 @@ namespace SC2 {
   class UnaryExpressionASTNode final: public ExpressionASTNode
   {
     std::shared_ptr<UnaryOperatorASTNode> const unary_operator{};
-    std::shared_ptr<ExpressionASTNode>          expression{};
+    std::shared_ptr<ExpressionASTNode> const    expression{};
 
     public:
     UnaryExpressionASTNode(
@@ -108,11 +126,8 @@ namespace SC2 {
       return expression;
     }
 
-    [[nodiscard]] std::pair<
-      std::shared_ptr<ValueTACKYASTNode>,
-      std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-      emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
-        const final override;
+    [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+      emitTACKY(ExpressionASTNodeEmitTACKYInput) const final override;
 
     virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
       final override
@@ -126,28 +141,156 @@ namespace SC2 {
     virtual ~UnaryExpressionASTNode() final override = default;
   };
 
-  class LiteralConstantASTNode final: public ExpressionASTNode
+  struct BinaryOperatorASTNode: public ASTNode
   {
-    int const value{};
+    virtual ~BinaryOperatorASTNode() override = default;
+  };
 
-    public:
-    explicit constexpr LiteralConstantASTNode(int value): value{ value } {}
-
-    [[nodiscard]] constexpr int getValue() const noexcept { return value; }
-
+  struct AddASTNode final: public BinaryOperatorASTNode
+  {
     virtual constexpr void
     prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
-      out << getValue();
+      out << '+';
     }
 
-    [[nodiscard]] virtual std::pair<
-      std::shared_ptr<ValueTACKYASTNode>,
-      std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-      emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
-        const final override;
+    virtual ~AddASTNode() final override = default;
+  };
 
-    virtual ~LiteralConstantASTNode() final override = default;
+  struct SubtractASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '-';
+    }
+
+    virtual ~SubtractASTNode() final override = default;
+  };
+
+  struct MultiplyASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '*';
+    }
+
+    virtual ~MultiplyASTNode() final override = default;
+  };
+
+  struct DivideASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '/';
+    }
+
+    virtual ~DivideASTNode() final override = default;
+  };
+
+  struct ModuloASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '%';
+    }
+
+    virtual ~ModuloASTNode() final override = default;
+  };
+
+  struct BitwiseAndASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '&';
+    }
+
+    virtual ~BitwiseAndASTNode() final override = default;
+  };
+
+  struct BitwiseOrASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '|';
+    }
+
+    virtual ~BitwiseOrASTNode() final override = default;
+  };
+
+  struct BitwiseXorASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << '^';
+    }
+
+    virtual ~BitwiseXorASTNode() final override = default;
+  };
+
+  struct LeftShiftASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "<<";
+    }
+
+    virtual ~LeftShiftASTNode() final override = default;
+  };
+
+  struct RightShiftASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << ">>";
+    }
+
+    virtual ~RightShiftASTNode() final override = default;
+  };
+
+  class BinaryExpressionASTNode final: public ExpressionASTNode
+  {
+    std::shared_ptr<BinaryOperatorASTNode> const binary_operator{};
+    std::shared_ptr<ExpressionASTNode> const     left_operand{};
+    std::shared_ptr<ExpressionASTNode> const     right_operand{};
+
+    public:
+    BinaryExpressionASTNode(
+      std::shared_ptr<BinaryOperatorASTNode> binary_operator,
+      std::shared_ptr<ExpressionASTNode>     left_operand,
+      std::shared_ptr<ExpressionASTNode>     right_operand
+    )
+      : binary_operator{ binary_operator }
+      , left_operand{ left_operand }
+      , right_operand{ right_operand }
+    {}
+
+    [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+      emitTACKY(ExpressionASTNodeEmitTACKYInput) const final override;
+
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
+    {
+      out << '(';
+      left_operand->prettyPrintHelper(out, indent_level);
+      out << ' ';
+      binary_operator->prettyPrintHelper(out, indent_level);
+      out << ' ';
+      right_operand->prettyPrintHelper(out, indent_level);
+      out << ')';
+    }
+
+    virtual ~BinaryExpressionASTNode() final override = default;
   };
 
   class StatementASTNode final: public ASTNode

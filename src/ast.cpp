@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -18,33 +19,23 @@ namespace SC2 {
     return std::make_shared<NegateTACKYASTNode>();
   }
 
-  std::pair<
-    std::shared_ptr<ValueTACKYASTNode>,
-    std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-  LiteralConstantASTNode::emitTACKY(
-    std::string_view,
-    std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions
-  ) const
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  LiteralConstantASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput input) const
   {
-    return std::make_pair<
-      std::shared_ptr<ValueTACKYASTNode>,
-      std::vector<std::shared_ptr<InstructionTACKYASTNode>>>(
+    auto const &[_, instructions]{ std::move(input) };
+    return ExpressionASTNodeEmitTACKYOutput{
       std::make_shared<LiteralConstantTACKYASTNode>(getValue()),
       std::move(instructions)
-    );
+    };
   }
 
-  std::pair<
-    std::shared_ptr<ValueTACKYASTNode>,
-    std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-  UnaryExpressionASTNode::emitTACKY(
-    std::string_view                                      identifier,
-    std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions
-  ) const
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  UnaryExpressionASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput input) const
   {
-    auto [source, new_instructions]{
-      getExpression()->emitTACKY(identifier, std::move(instructions))
-    };
+    auto const &[identifier, instructions]{ std::move(input) };
+    auto [source, new_instructions]{ getExpression()->emitTACKY(
+      ExpressionASTNodeEmitTACKYInput{ identifier, std::move(instructions) }
+    ) };
     auto destination{ std::make_shared<VariableTACKYASTNode>(
       Utility::generateFreshIdentifier(identifier)
     ) };
@@ -53,21 +44,24 @@ namespace SC2 {
       source,
       destination
     ));
-    return std::make_pair<
-      std::shared_ptr<ValueTACKYASTNode>,
-      std::vector<std::shared_ptr<InstructionTACKYASTNode>>>(
-      destination,
-      std::move(new_instructions)
-    );
+    return ExpressionASTNodeEmitTACKYOutput{ destination,
+                                             std::move(new_instructions) };
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  BinaryExpressionASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput) const
+  {
+    throw std::runtime_error("Not yet implemented");
   }
 
   std::vector<std::shared_ptr<InstructionTACKYASTNode>>
   StatementASTNode::emitTACKY(std::string_view identifier) const
   {
-    auto [value, instructions]{ getExpression()->emitTACKY(
-      identifier,
-      std::vector<std::shared_ptr<InstructionTACKYASTNode>>{}
-    ) };
+    auto [value, instructions]{
+      getExpression()->emitTACKY(ExpressionASTNodeEmitTACKYInput{
+        identifier,
+        std::vector<std::shared_ptr<InstructionTACKYASTNode>>{} })
+    };
     instructions.push_back(std::make_shared<ReturnTACKYASTNode>(value));
     return instructions;
   }

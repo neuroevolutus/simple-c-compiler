@@ -19,6 +19,16 @@ namespace SC2 {
       return typeid(*this) == typeid(other);
     }
 
+    [[nodiscard]] virtual bool isUnaryOperatorToken() const noexcept
+    {
+      return false;
+    }
+
+    [[nodiscard]] virtual bool isBinaryOperatorToken() const noexcept
+    {
+      return false;
+    }
+
     [[nodiscard]] virtual constexpr std::string toString() const = 0;
 
     virtual ~BasicToken() = default;
@@ -217,7 +227,18 @@ namespace SC2 {
     virtual ~SemicolonToken() final override = default;
   };
 
-  struct TildeToken final: public BasicToken
+  struct UnaryOperatorToken: virtual public BasicToken
+  {
+    [[nodiscard]] virtual constexpr bool
+    isUnaryOperatorToken() const noexcept final override
+    {
+      return true;
+    };
+
+    virtual ~UnaryOperatorToken() override = default;
+  };
+
+  struct TildeToken final: public UnaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -233,7 +254,22 @@ namespace SC2 {
     virtual ~TildeToken() final override = default;
   };
 
-  struct HyphenToken final: public BasicToken
+  struct BinaryOperatorToken: virtual public BasicToken
+  {
+    [[nodiscard]] virtual constexpr bool
+    isBinaryOperatorToken() const noexcept final override
+    {
+      return true;
+    }
+
+    [[nodiscard]] virtual std::size_t getPrecedence() const = 0;
+
+    virtual ~BinaryOperatorToken() override = default;
+  };
+
+  struct HyphenToken final
+    : public UnaryOperatorToken
+    , public BinaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -241,7 +277,13 @@ namespace SC2 {
       return "hyphen";
     }
 
-    constexpr auto operator<=>(HyphenToken const &) const
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 12;
+    }
+
+    constexpr auto operator<=>(HyphenToken const &) const noexcept
     {
       return std::strong_ordering::equal;
     }
@@ -265,12 +307,18 @@ namespace SC2 {
     virtual ~DecrementToken() final override = default;
   };
 
-  struct PlusSignToken final: public BasicToken
+  struct PlusSignToken final: public BinaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "plus sign";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 12;
     }
 
     constexpr auto operator<=>(PlusSignToken const &) const
@@ -281,12 +329,18 @@ namespace SC2 {
     virtual ~PlusSignToken() final override = default;
   };
 
-  struct AsteriskToken final: public BasicToken
+  struct AsteriskToken final: public BinaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "asterisk";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 13;
     }
 
     constexpr auto operator<=>(AsteriskToken const &) const
@@ -297,12 +351,18 @@ namespace SC2 {
     virtual ~AsteriskToken() final override = default;
   };
 
-  struct ForwardSlashToken final: public BasicToken
+  struct ForwardSlashToken final: public BinaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "forward slash";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 13;
     }
 
     constexpr auto operator<=>(ForwardSlashToken const &) const
@@ -313,12 +373,18 @@ namespace SC2 {
     virtual ~ForwardSlashToken() final override = default;
   };
 
-  struct PercentSignToken final: public BasicToken
+  struct PercentSignToken final: public BinaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
     {
       return "percent sign";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 13;
     }
 
     constexpr auto operator<=>(PercentSignToken const &) const
@@ -329,7 +395,7 @@ namespace SC2 {
     virtual ~PercentSignToken() final override = default;
   };
 
-  struct BitwiseToken: public BasicToken
+  struct BitwiseToken: public BinaryOperatorToken
   {
     virtual ~BitwiseToken() override = default;
   };
@@ -340,6 +406,12 @@ namespace SC2 {
     toString() const noexcept final override
     {
       return "bitwise and";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 8;
     }
 
     constexpr auto operator<=>(BitwiseAndToken const &) const
@@ -358,6 +430,12 @@ namespace SC2 {
       return "bitwise or";
     }
 
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 6;
+    }
+
     constexpr auto operator<=>(BitwiseOrToken const &) const
     {
       return std::strong_ordering::equal;
@@ -374,6 +452,12 @@ namespace SC2 {
       return "bitwise xor";
     }
 
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 7;
+    }
+
     constexpr auto operator<=>(BitwiseXorToken const &) const
     {
       return std::strong_ordering::equal;
@@ -382,7 +466,7 @@ namespace SC2 {
     virtual ~BitwiseXorToken() final override = default;
   };
 
-  struct ShiftToken: public BasicToken
+  struct ShiftToken: public BinaryOperatorToken
   {
     virtual ~ShiftToken() override = default;
   };
@@ -393,6 +477,12 @@ namespace SC2 {
     toString() const noexcept final override
     {
       return "left shift";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 11;
     }
 
     constexpr auto operator<=>(LeftShiftToken const &) const
@@ -409,6 +499,12 @@ namespace SC2 {
     toString() const noexcept final override
     {
       return "right shift";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 11;
     }
 
     constexpr auto operator<=>(RightShiftToken const &) const
@@ -442,6 +538,22 @@ namespace SC2 {
       return token->toString();
     }
 
+    [[nodiscard]] constexpr bool isUnaryOperatorToken() const
+    {
+      return token->isUnaryOperatorToken();
+    }
+
+    [[nodiscard]] constexpr bool isBinaryOperatorToken() const
+    {
+      return token->isBinaryOperatorToken();
+    }
+
+    [[nodiscard]] constexpr std::size_t getPrecedence() const
+    {
+      return std::dynamic_pointer_cast<BinaryOperatorToken>(token)
+        ->getPrecedence();
+    }
+
     [[nodiscard]] bool isLiteralConstant() const noexcept
     {
       return static_cast<bool>(
@@ -469,6 +581,60 @@ namespace SC2 {
     {
       return static_cast<bool>(std::dynamic_pointer_cast<ParenthesisToken>(token
       ));
+    }
+
+    [[nodiscard]] bool isPlusSign() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<PlusSignToken>(token));
+    }
+
+    [[nodiscard]] bool isAsterisk() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<AsteriskToken>(token));
+    }
+
+    [[nodiscard]] bool isForwardSlash() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<ForwardSlashToken>(token)
+      );
+    }
+
+
+    [[nodiscard]] bool isPercentSign() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<PercentSignToken>(token
+      ));
+    }
+
+    [[nodiscard]] bool isBitwiseAnd() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<BitwiseAndToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isBitwiseOr() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<BitwiseOrToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isBitwiseXor() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<BitwiseXorToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isLeftShift() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<LeftShiftToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isRightShift() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<RightShiftToken>(token)
+      );
     }
 
     [[nodiscard]] std::shared_ptr<IdentifierToken> getIdentifier() const;

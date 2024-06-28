@@ -31,7 +31,7 @@ namespace SC2 {
     public:
     explicit LexerInvalidTokenError(std::string_view const invalid_program_text)
       : message{
-        std::format("Lexer error: Invalid token: {}", invalid_program_text)
+        std::format("Lexer error: invalid token: {}", invalid_program_text)
       }
     {}
 
