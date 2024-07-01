@@ -75,8 +75,7 @@ int main(int argc, char const * const * const argv)
     auto const [last_offset, _, cleaned_assembly]{
       assembly->replacePseudoRegisters()
     };
-    auto const fixed_assembly{ cleaned_assembly->fixUpInstructions(-last_offset
-    ) };
+    auto const fixed_assembly{ cleaned_assembly->fixUp(-last_offset) };
     if (option && *option == "--codegen") return EXIT_SUCCESS;
     auto output_file_stream{ std::ofstream(file_basename + ".s") };
     fixed_assembly->emitCode(output_file_stream);

@@ -25,6 +25,7 @@ namespace SC2 {
     virtual ~TACKYASTNode() = default;
   };
 
+  struct OperandAssemblyASTNode;
   struct ValueTACKYASTNode: public TACKYASTNode
   {
     [[nodiscard]] virtual std::shared_ptr<OperandAssemblyASTNode>
@@ -223,17 +224,23 @@ namespace SC2 {
     virtual ~UnaryTACKYASTNode() final override = default;
   };
 
-  class BinaryOperatorAssemblyASTNode;
+  struct BinaryOperatorTACKYASTNodeEmitAssemblyInput
+  {
+    std::shared_ptr<ValueTACKYASTNode> const    left_operand{};
+    std::shared_ptr<ValueTACKYASTNode> const    right_operand{};
+    std::shared_ptr<VariableTACKYASTNode> const destination{};
+  };
+
+  class BinaryTACKYASTNode;
   class BinaryOperatorTACKYASTNode: public TACKYASTNode
   {
     protected:
     virtual void printBinaryOperator(std::ostream &) = 0;
 
     public:
-    [[nodiscard]] virtual std::shared_ptr<BinaryOperatorAssemblyASTNode>
-    emitAssembly() const {
-      throw std::runtime_error("Unimplemented");
-    }
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input) const = 0;
 
     constexpr virtual void
     prettyPrintHelper(std::ostream &out, std::size_t) final override
@@ -253,6 +260,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~AddTACKYASTNode() final override = default;
   };
 
@@ -265,6 +277,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~SubtractTACKYASTNode() final override = default;
   };
 
@@ -277,6 +294,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~MultiplyTACKYASTNode() final override = default;
   };
 
@@ -289,6 +311,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~DivideTACKYASTNode() final override = default;
   };
 
@@ -301,6 +328,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~ModuloTACKYASTNode() final override = default;
   };
 
@@ -313,6 +345,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~BitwiseAndTACKYASTNode() final override = default;
   };
 
@@ -325,6 +362,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~BitwiseOrTACKYASTNode() final override = default;
   };
 
@@ -337,6 +379,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~BitwiseXorTACKYASTNode() final override = default;
   };
 
@@ -349,6 +396,11 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~LeftShiftTACKYASTNode() final override = default;
   };
 
@@ -361,32 +413,20 @@ namespace SC2 {
     }
 
     public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
     virtual ~RightShiftTACKYASTNode() final override = default;
   };
 
   class BinaryTACKYASTNode final: public InstructionTACKYASTNode
   {
-    std::shared_ptr<BinaryOperatorTACKYASTNode> binary_operator{};
-    std::shared_ptr<ValueTACKYASTNode>          left_operand{};
-    std::shared_ptr<ValueTACKYASTNode>          right_operand{};
-    std::shared_ptr<VariableTACKYASTNode>       destination{};
-
-    public:
-    BinaryTACKYASTNode(
-      std::shared_ptr<BinaryOperatorTACKYASTNode> binary_operator,
-      std::shared_ptr<ValueTACKYASTNode>          left_operand,
-      std::shared_ptr<ValueTACKYASTNode>          right_operand,
-      std::shared_ptr<VariableTACKYASTNode>       destination
-    )
-      : binary_operator{ binary_operator }
-      , left_operand{ left_operand }
-      , right_operand{ right_operand }
-      , destination{ destination }
-    {}
-
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override;
+    std::shared_ptr<BinaryOperatorTACKYASTNode> const binary_operator{};
+    std::shared_ptr<ValueTACKYASTNode> const          left_operand{};
+    std::shared_ptr<ValueTACKYASTNode> const          right_operand{};
+    std::shared_ptr<VariableTACKYASTNode> const       destination{};
 
     [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
     getBinaryOperator() const
@@ -408,6 +448,23 @@ namespace SC2 {
     {
       return destination;
     }
+
+    public:
+    BinaryTACKYASTNode(
+      std::shared_ptr<BinaryOperatorTACKYASTNode> binary_operator,
+      std::shared_ptr<ValueTACKYASTNode>          left_operand,
+      std::shared_ptr<ValueTACKYASTNode>          right_operand,
+      std::shared_ptr<VariableTACKYASTNode>       destination
+    )
+      : binary_operator{ binary_operator }
+      , left_operand{ left_operand }
+      , right_operand{ right_operand }
+      , destination{ destination }
+    {}
+
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly() const final override;
 
     virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
       final override

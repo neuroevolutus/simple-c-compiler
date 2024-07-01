@@ -1,0 +1,106 @@
+#include <sc2/assembly_ast.hpp>
+
+#include <memory>
+#include <utility>
+#include <vector>
+
+namespace SC2 {
+  [[nodiscard]] std::vector<std::shared_ptr<InstructionAssemblyASTNode>>
+  BinaryOperatorAssemblyASTNode::fixUp(BinaryAssemblyASTNodeFixUpInput &&input)
+  {
+    auto const &[source, destination]{ std::move(input) };
+    auto const &stack_source{
+      std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(source)
+    };
+    auto const &stack_destination{
+      std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(destination)
+    };
+    return (stack_source && stack_destination) ?
+             std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
+               std::make_shared<MovAssemblyASTNode>(
+                 std::move(source),
+                 std::make_shared<R10RegisterAssemblyASTNode>()
+               ),
+               std::make_shared<BinaryAssemblyASTNode>(
+                 std::dynamic_pointer_cast<BinaryOperatorAssemblyASTNode>(
+                   shared_from_this()
+                 ),
+                 std::make_shared<R10RegisterAssemblyASTNode>(),
+                 std::move(destination)
+               )
+             } :
+             std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
+               std::make_shared<BinaryAssemblyASTNode>(
+                 std::dynamic_pointer_cast<BinaryOperatorAssemblyASTNode>(
+                   shared_from_this()
+                 ),
+                 std::move(source),
+                 std::move(destination)
+               )
+             };
+  }
+
+  [[nodiscard]] std::vector<std::shared_ptr<InstructionAssemblyASTNode>>
+  MultiplyAssemblyASTNode::fixUp(BinaryAssemblyASTNodeFixUpInput &&input)
+  {
+    auto const &[source, destination]{ std::move(input) };
+    auto const &stack_destination{
+      std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(destination)
+    };
+    return stack_destination ?
+             std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
+               std::make_shared<MovAssemblyASTNode>(
+                 destination,
+                 std::make_shared<R11RegisterAssemblyASTNode>()
+               ),
+               std::make_shared<BinaryAssemblyASTNode>(
+                 std::make_shared<MultiplyAssemblyASTNode>(),
+                 std::move(source),
+                 std::make_shared<R11RegisterAssemblyASTNode>()
+               ),
+               std::make_shared<MovAssemblyASTNode>(
+                 std::make_shared<R11RegisterAssemblyASTNode>(),
+                 destination
+               )
+             } :
+             std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
+               std::make_shared<BinaryAssemblyASTNode>(
+                 std::make_shared<MultiplyAssemblyASTNode>(),
+                 std::move(source),
+                 std::move(destination)
+               )
+             };
+  }
+
+  [[nodiscard]] std::vector<std::shared_ptr<InstructionAssemblyASTNode>>
+  ShiftOperatorAssemblyASTNode::fixUp(BinaryAssemblyASTNodeFixUpInput &&input)
+  {
+    auto const &[source, destination]{ std::move(input) };
+    auto const &stack_source{
+      std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(source)
+    };
+    return stack_source ?
+             std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
+               std::make_shared<MovAssemblyASTNode>(
+                 std::move(source),
+                 std::make_shared<CLRegisterAssemblyASTNode>()
+               ),
+               std::make_shared<BinaryAssemblyASTNode>(
+                 std::dynamic_pointer_cast<BinaryOperatorAssemblyASTNode>(
+                   std::move(shared_from_this())
+                 ),
+                 std::make_shared<CLRegisterAssemblyASTNode>(),
+                 std::move(destination)
+               )
+             } :
+             std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
+               std::make_shared<BinaryAssemblyASTNode>(
+                 std::dynamic_pointer_cast<BinaryOperatorAssemblyASTNode>(
+                   shared_from_this()
+                 ),
+                 std::move(source),
+                 std::move(destination)
+               )
+             };
+  }
+} // namespace SC2

@@ -14,7 +14,8 @@ namespace SC2 {
     return std::make_shared<ComplementTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode> NegateASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
+  NegateASTNode::emitTACKY() const
   {
     return std::make_shared<NegateTACKYASTNode>();
   }
@@ -48,52 +49,62 @@ namespace SC2 {
                                              std::move(new_instructions) };
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> AddASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  AddASTNode::emitTACKY() const
   {
     return std::make_shared<AddTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> SubtractASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  SubtractASTNode::emitTACKY() const
   {
     return std::make_shared<SubtractTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> MultiplyASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  MultiplyASTNode::emitTACKY() const
   {
     return std::make_shared<MultiplyTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> DivideASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  DivideASTNode::emitTACKY() const
   {
     return std::make_shared<DivideTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> ModuloASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  ModuloASTNode::emitTACKY() const
   {
     return std::make_shared<ModuloTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> BitwiseAndASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  BitwiseAndASTNode::emitTACKY() const
   {
     return std::make_shared<BitwiseAndTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> BitwiseOrASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  BitwiseOrASTNode::emitTACKY() const
   {
     return std::make_shared<BitwiseOrTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> BitwiseXorASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  BitwiseXorASTNode::emitTACKY() const
   {
     return std::make_shared<BitwiseXorTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> LeftShiftASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  LeftShiftASTNode::emitTACKY() const
   {
     return std::make_shared<LeftShiftTACKYASTNode>();
   }
 
-  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode> RightShiftASTNode::emitTACKY() const
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  RightShiftASTNode::emitTACKY() const
   {
     return std::make_shared<RightShiftTACKYASTNode>();
   }
