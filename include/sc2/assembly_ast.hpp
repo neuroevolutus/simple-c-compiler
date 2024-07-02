@@ -16,7 +16,6 @@
 #include <numeric>
 #include <ostream>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -58,8 +57,8 @@ namespace SC2 {
     : public std::enable_shared_from_this<AssemblyASTNode>
     , public PrettyPrinterMixin
   {
-    virtual constexpr void emitCode(std::ostream &out) = 0;
-    virtual ~AssemblyASTNode()                         = default;
+    virtual void emitCode(std::ostream &out) = 0;
+    virtual ~AssemblyASTNode()               = default;
   };
 
   struct OperandAssemblyASTNode: public AssemblyASTNode
@@ -130,8 +129,9 @@ namespace SC2 {
     virtual ~RegisterAssemblyASTNode() override = default;
   };
 
-  struct AXRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
+  class AXRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
   {
+    protected:
     virtual constexpr void emitRegister(std::ostream &out) final override
     {
       out << "eax";
@@ -142,11 +142,13 @@ namespace SC2 {
       out << "%ax";
     }
 
+    public:
     virtual ~AXRegisterAssemblyASTNode() final override = default;
   };
 
-  struct DXRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
+  class DXRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
   {
+    protected:
     virtual constexpr void emitRegister(std::ostream &out) final override
     {
       out << "edx";
@@ -157,11 +159,13 @@ namespace SC2 {
       out << "%dx";
     }
 
+    public:
     virtual ~DXRegisterAssemblyASTNode() final override = default;
   };
 
-  struct R10RegisterAssemblyASTNode final: public RegisterAssemblyASTNode
+  class R10dRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
   {
+    protected:
     virtual constexpr void emitRegister(std::ostream &out) final override
     {
       out << "r10d";
@@ -169,14 +173,16 @@ namespace SC2 {
 
     virtual constexpr void printRegister(std::ostream &out) final override
     {
-      out << "%r10";
+      out << "%r10d";
     }
 
-    virtual ~R10RegisterAssemblyASTNode() final override = default;
+    public:
+    virtual ~R10dRegisterAssemblyASTNode() final override = default;
   };
 
-  struct R11RegisterAssemblyASTNode final: public RegisterAssemblyASTNode
+  class R11dRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
   {
+    protected:
     virtual constexpr void emitRegister(std::ostream &out) final override
     {
       out << "r11d";
@@ -184,14 +190,33 @@ namespace SC2 {
 
     virtual constexpr void printRegister(std::ostream &out) final override
     {
-      out << "%r11";
+      out << "%r11d";
     }
 
-    virtual ~R11RegisterAssemblyASTNode() final override = default;
+    public:
+    virtual ~R11dRegisterAssemblyASTNode() final override = default;
   };
 
-  struct CLRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
+  class R11bRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
   {
+    protected:
+    virtual constexpr void emitRegister(std::ostream &out) final override
+    {
+      out << "r11b";
+    }
+
+    virtual constexpr void printRegister(std::ostream &out) final override
+    {
+      out << "%r11b";
+    }
+
+    public:
+    virtual ~R11bRegisterAssemblyASTNode() final override = default;
+  };
+
+  class CLRegisterAssemblyASTNode final: public RegisterAssemblyASTNode
+  {
+    protected:
     virtual constexpr void emitRegister(std::ostream &out) final override
     {
       out << "cl";
@@ -202,6 +227,7 @@ namespace SC2 {
       out << "%cl";
     }
 
+    public:
     virtual ~CLRegisterAssemblyASTNode() final override = default;
   };
 
@@ -308,7 +334,7 @@ namespace SC2 {
     virtual ~InstructionAssemblyASTNode() override = default;
   };
 
-  class MovAssemblyASTNode final: public InstructionAssemblyASTNode
+  class MovlAssemblyASTNode final: public InstructionAssemblyASTNode
   {
     std::shared_ptr<OperandAssemblyASTNode> const source{};
     std::shared_ptr<OperandAssemblyASTNode> const destination{};
@@ -324,7 +350,7 @@ namespace SC2 {
     }
 
     public:
-    MovAssemblyASTNode(
+    MovlAssemblyASTNode(
       std::shared_ptr<OperandAssemblyASTNode> source,
       std::shared_ptr<OperandAssemblyASTNode> destination
     )
@@ -345,7 +371,7 @@ namespace SC2 {
       };
       return { offset_one,
                std::move(map_one),
-               std::make_shared<MovAssemblyASTNode>(
+               std::make_shared<MovlAssemblyASTNode>(
                  std::move(new_source),
                  std::move(new_destination)
                ) };
@@ -363,12 +389,12 @@ namespace SC2 {
       };
       if (stack_source && stack_destination) {
         return {
-          std::make_shared<MovAssemblyASTNode>(
+          std::make_shared<MovlAssemblyASTNode>(
             getSource(),
-            std::make_shared<R10RegisterAssemblyASTNode>()
+            std::make_shared<R10dRegisterAssemblyASTNode>()
           ),
-          std::make_shared<MovAssemblyASTNode>(
-            std::make_shared<R10RegisterAssemblyASTNode>(),
+          std::make_shared<MovlAssemblyASTNode>(
+            std::make_shared<R10dRegisterAssemblyASTNode>(),
             getDestination()
           ),
         };
@@ -392,14 +418,108 @@ namespace SC2 {
       final override
     {
       Utility::indent(out, indent_level);
-      out << "Instruction: Mov (";
+      out << "Instruction: Movl (";
       getSource()->prettyPrintHelper(out, indent_level);
       out << "), (";
       getDestination()->prettyPrintHelper(out, indent_level);
       out << ")\n";
     }
 
-    virtual ~MovAssemblyASTNode() final override = default;
+    virtual ~MovlAssemblyASTNode() final override = default;
+  };
+
+  class MovbAssemblyASTNode final: public InstructionAssemblyASTNode
+  {
+    std::shared_ptr<OperandAssemblyASTNode> const source{};
+    std::shared_ptr<OperandAssemblyASTNode> const destination{};
+
+    [[nodiscard]] std::shared_ptr<OperandAssemblyASTNode> getSource() const
+    {
+      return source;
+    }
+
+    [[nodiscard]] std::shared_ptr<OperandAssemblyASTNode> getDestination() const
+    {
+      return destination;
+    }
+
+    public:
+    MovbAssemblyASTNode(
+      std::shared_ptr<OperandAssemblyASTNode> source,
+      std::shared_ptr<OperandAssemblyASTNode> destination
+    )
+      : source{ source }
+      , destination{ destination }
+    {}
+
+    [[nodiscard]] virtual ReplacePseudoRegistersResult<
+      InstructionAssemblyASTNode>
+    replacePseudoRegisters(ReplacePseudoRegistersInput &&input) final override
+    {
+      auto [offset_zero, map_zero, new_source]{
+        getSource()->replacePseudoRegisters(std::move(input))
+      };
+      auto [offset_one, map_one, new_destination]{
+        getDestination()->replacePseudoRegisters({ offset_zero,
+                                                   std::move(map_zero) })
+      };
+      return { offset_one,
+               std::move(map_one),
+               std::make_shared<MovbAssemblyASTNode>(
+                 std::move(new_source),
+                 std::move(new_destination)
+               ) };
+    }
+
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    fixUp() override
+    {
+      auto const &stack_source{
+        std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(getSource())
+      };
+      auto const &stack_destination{
+        std::dynamic_pointer_cast<StackOffsetAssemblyASTNode>(getDestination())
+      };
+      if (stack_source && stack_destination) {
+        return {
+          std::make_shared<MovbAssemblyASTNode>(
+            getSource(),
+            std::make_shared<R10dRegisterAssemblyASTNode>()
+          ),
+          std::make_shared<MovbAssemblyASTNode>(
+            std::make_shared<R10dRegisterAssemblyASTNode>(),
+            getDestination()
+          ),
+        };
+      } else
+        return { std::dynamic_pointer_cast<InstructionAssemblyASTNode>(
+          shared_from_this()
+        ) };
+    }
+
+    virtual void emitCode(std::ostream &out) final override
+    {
+      Utility::indent(out, 2);
+      out << "movb ";
+      getSource()->emitCode(out);
+      out << ", ";
+      getDestination()->emitCode(out);
+      out << '\n';
+    }
+
+    virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
+      final override
+    {
+      Utility::indent(out, indent_level);
+      out << "Instruction: Movb (";
+      getSource()->prettyPrintHelper(out, indent_level);
+      out << "), (";
+      getDestination()->prettyPrintHelper(out, indent_level);
+      out << ")\n";
+    }
+
+    virtual ~MovbAssemblyASTNode() final override = default;
   };
 
   class UnaryOperatorAssemblyASTNode: public AssemblyASTNode
@@ -547,9 +667,9 @@ namespace SC2 {
     }
 
     public:
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "addl";
     }
 
     virtual ~AddAssemblyASTNode() final override = default;
@@ -564,9 +684,9 @@ namespace SC2 {
     }
 
     public:
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "subl";
     }
 
     virtual ~SubtractAssemblyASTNode() final override = default;
@@ -585,9 +705,9 @@ namespace SC2 {
       std::shared_ptr<InstructionAssemblyASTNode>>
     fixUp(BinaryAssemblyASTNodeFixUpInput &&input) final override;
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "imull";
     }
 
     virtual ~MultiplyAssemblyASTNode() final override = default;
@@ -601,9 +721,9 @@ namespace SC2 {
       out << "BitwiseAnd";
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "andl";
     }
 
     public:
@@ -618,9 +738,9 @@ namespace SC2 {
       out << "BitwiseOr";
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "orl";
     }
 
     public:
@@ -635,9 +755,9 @@ namespace SC2 {
       out << "BitwiseXor";
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "xorl";
     }
 
     public:
@@ -661,9 +781,9 @@ namespace SC2 {
       out << "LeftShift";
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "sall";
     }
 
     public:
@@ -678,9 +798,9 @@ namespace SC2 {
       out << "RightShift";
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Not implemented");
+      out << "sarl";
     }
 
     public:
@@ -747,9 +867,14 @@ namespace SC2 {
       return getBinaryOperator()->fixUp({ getSource(), getDestination() });
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Unimplemented");
+      getBinaryOperator()->emitCode(out);
+      out << ' ';
+      getSource()->emitCode(out);
+      out << ", ";
+      getDestination()->emitCode(out);
+      out << '\n';
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -801,9 +926,9 @@ namespace SC2 {
 
   struct CdqAssemblyASTNode final: public InstructionAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Unimplemented");
+      out << "cdq\n";
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -857,12 +982,12 @@ namespace SC2 {
                getOperand()
              ) ?
                std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
-                 std::make_shared<MovAssemblyASTNode>(
+                 std::make_shared<MovlAssemblyASTNode>(
                    getOperand(),
-                   std::make_shared<R10RegisterAssemblyASTNode>()
+                   std::make_shared<R10dRegisterAssemblyASTNode>()
                  ),
                  std::make_shared<IdivAssemblyASTNode>(
-                   std::make_shared<R10RegisterAssemblyASTNode>()
+                   std::make_shared<R10dRegisterAssemblyASTNode>()
                  )
                } :
                std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
@@ -872,9 +997,11 @@ namespace SC2 {
                };
     }
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error("Unimplemented");
+      out << "idivl ";
+      getOperand()->emitCode(out);
+      out << '\n';
     }
 
     virtual constexpr void prettyPrintHelper(

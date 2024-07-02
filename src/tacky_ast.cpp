@@ -23,7 +23,7 @@ namespace SC2 {
   ReturnTACKYASTNode::emitAssembly() const
   {
     return std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         getValue()->emitAssembly(),
         std::make_shared<AXRegisterAssemblyASTNode>()
       ),
@@ -48,7 +48,7 @@ namespace SC2 {
   {
     auto const &destinationAssembly{ getDestination()->emitAssembly() };
     return std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         getSource()->emitAssembly(),
         destinationAssembly
       ),
@@ -70,7 +70,7 @@ namespace SC2 {
       destination->emitAssembly()
     };
     return std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         left_operand->emitAssembly(),
         destination_assembly
       ),
@@ -122,13 +122,13 @@ namespace SC2 {
   {
     auto const &[left_operand, right_operand, destination]{ std::move(input) };
     return std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         left_operand->emitAssembly(),
         std::make_shared<AXRegisterAssemblyASTNode>()
       ),
       std::make_shared<CdqAssemblyASTNode>(),
       std::make_shared<IdivAssemblyASTNode>(right_operand->emitAssembly()),
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         std::make_shared<AXRegisterAssemblyASTNode>(),
         destination->emitAssembly()
       )
@@ -142,13 +142,13 @@ namespace SC2 {
   {
     auto const &[left_operand, right_operand, destination]{ std::move(input) };
     return std::vector<std::shared_ptr<InstructionAssemblyASTNode>>{
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         left_operand->emitAssembly(),
         std::make_shared<AXRegisterAssemblyASTNode>()
       ),
       std::make_shared<CdqAssemblyASTNode>(),
       std::make_shared<IdivAssemblyASTNode>(right_operand->emitAssembly()),
-      std::make_shared<MovAssemblyASTNode>(
+      std::make_shared<MovlAssemblyASTNode>(
         std::make_shared<DXRegisterAssemblyASTNode>(),
         destination->emitAssembly()
       )
