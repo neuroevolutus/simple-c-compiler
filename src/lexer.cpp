@@ -86,4 +86,45 @@ namespace SC2 {
     "^>>",
     std::regex::ECMAScript | std::regex::optimize
   );
+
+  std::regex Lexer::exclamation_point_regex(
+    "^!",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::double_ampersand_regex(
+    "^&&",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::double_pipe_regex(
+    "^\\|\\|",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex
+    Lexer::equal_to_regex("^==", std::regex::ECMAScript | std::regex::optimize);
+
+  std::regex Lexer::not_equal_to_regex(
+    "^!=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex
+    Lexer::less_than_regex("^<", std::regex::ECMAScript | std::regex::optimize);
+
+  std::regex Lexer::greater_than_regex(
+    "^>",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::less_than_or_equal_to_regex(
+    "^<=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::greater_than_or_equal_to_regex(
+    "^>=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
 } // namespace SC2

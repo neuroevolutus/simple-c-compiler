@@ -72,6 +72,15 @@ namespace SC2 {
     static std::regex bitwise_xor_regex;
     static std::regex left_shift_regex;
     static std::regex right_shift_regex;
+    static std::regex exclamation_point_regex;
+    static std::regex double_ampersand_regex;
+    static std::regex double_pipe_regex;
+    static std::regex equal_to_regex;
+    static std::regex not_equal_to_regex;
+    static std::regex less_than_regex;
+    static std::regex greater_than_regex;
+    static std::regex less_than_or_equal_to_regex;
+    static std::regex greater_than_or_equal_to_regex;
 
     std::string program_text{};
     Token       current_token;
@@ -154,6 +163,15 @@ namespace SC2 {
         std::cmatch bitwise_xor_regex_match{};
         std::cmatch left_shift_regex_match{};
         std::cmatch right_shift_regex_match{};
+        std::cmatch exclamation_point_regex_match{};
+        std::cmatch double_ampersand_regex_match{};
+        std::cmatch double_pipe_regex_match{};
+        std::cmatch equal_to_regex_match{};
+        std::cmatch not_equal_to_regex_match{};
+        std::cmatch less_than_regex_match{};
+        std::cmatch greater_than_regex_match{};
+        std::cmatch less_than_or_equal_to_regex_match{};
+        std::cmatch greater_than_or_equal_to_regex_match{};
         std::regex_search(
           program_text.c_str(),
           program_text.c_str() + program_text.size(),
@@ -256,7 +274,61 @@ namespace SC2 {
           right_shift_regex_match,
           right_shift_regex
         );
-        std::array<std::cmatch::difference_type, 17> const match_sizes{
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          exclamation_point_regex_match,
+          exclamation_point_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          double_ampersand_regex_match,
+          double_ampersand_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          double_pipe_regex_match,
+          double_pipe_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          equal_to_regex_match,
+          equal_to_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          not_equal_to_regex_match,
+          not_equal_to_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          less_than_regex_match,
+          less_than_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          greater_than_regex_match,
+          greater_than_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          less_than_or_equal_to_regex_match,
+          less_than_or_equal_to_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          greater_than_or_equal_to_regex_match,
+          greater_than_or_equal_to_regex
+        );
+        std::array<std::cmatch::difference_type, 26> const match_sizes{
           identifier_regex_match.length(),
           literal_constant_regex_match.length(),
           parenthesis_regex_match.length(),
@@ -273,7 +345,16 @@ namespace SC2 {
           bitwise_or_regex_match.length(),
           bitwise_xor_regex_match.length(),
           left_shift_regex_match.length(),
-          right_shift_regex_match.length()
+          right_shift_regex_match.length(),
+          exclamation_point_regex_match.length(),
+          double_ampersand_regex_match.length(),
+          double_pipe_regex_match.length(),
+          equal_to_regex_match.length(),
+          not_equal_to_regex_match.length(),
+          less_than_regex_match.length(),
+          greater_than_regex_match.length(),
+          less_than_or_equal_to_regex_match.length(),
+          greater_than_or_equal_to_regex_match.length()
         };
         std::cmatch::difference_type const largest_match_size{
           match_sizes[std::ranges::distance(
@@ -360,6 +441,28 @@ namespace SC2 {
           current_token = Token(std::make_shared<LeftShiftToken>());
         } else if (right_shift_regex_match.length() == largest_match_size) {
           current_token = Token(std::make_shared<RightShiftToken>());
+        } else if (exclamation_point_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<ExclamationPointToken>());
+        } else if (double_ampersand_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<DoubleAmpersandToken>());
+        } else if (double_pipe_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<DoublePipeToken>());
+        } else if (equal_to_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<EqualToToken>());
+        } else if (not_equal_to_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<NotEqualToToken>());
+        } else if (less_than_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<LessThanToken>());
+        } else if (greater_than_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<GreaterThanToken>());
+        } else if (less_than_or_equal_to_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<LessThanOrEqualToToken>());
+        } else if (greater_than_or_equal_to_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<GreaterThanOrEqualToToken>());
         } else
           std::unreachable();
         program_text.erase(0, largest_match_size);

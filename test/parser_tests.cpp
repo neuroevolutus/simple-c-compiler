@@ -103,7 +103,7 @@ TEST_CASE("parser behaves correctly")
         Catch::Matchers::Message(
           "Parser error: invalid non-terminal <program>:\n"
           "Parser error: invalid non-terminal <function>:\n"
-          "Lexer error: invalid token: <"
+          "Parser error: expected (right curly brace) but got (less than)"
         )
       );
     }

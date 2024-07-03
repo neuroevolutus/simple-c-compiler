@@ -515,6 +515,198 @@ namespace SC2 {
     virtual ~RightShiftToken() final override = default;
   };
 
+  struct ExclamationPointToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "exclamation point";
+    }
+
+    constexpr auto operator<=>(ExclamationPointToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~ExclamationPointToken() final override = default;
+  };
+
+  struct DoubleAmpersandToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "double ampersand";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 5;
+    }
+
+    constexpr auto operator<=>(DoubleAmpersandToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~DoubleAmpersandToken() final override = default;
+  };
+
+  struct DoublePipeToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "double pipe";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 4;
+    }
+
+    constexpr auto operator<=>(DoublePipeToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~DoublePipeToken() final override = default;
+  };
+
+  struct EqualToToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "equal to";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 9;
+    }
+
+    constexpr auto operator<=>(EqualToToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~EqualToToken() final override = default;
+  };
+
+  struct NotEqualToToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "not equal to";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 9;
+    }
+
+    constexpr auto operator<=>(NotEqualToToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~NotEqualToToken() final override = default;
+  };
+
+  struct LessThanToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "less than";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 10;
+    }
+
+    constexpr auto operator<=>(LessThanToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~LessThanToken() final override = default;
+  };
+
+  struct GreaterThanToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "greater than";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 10;
+    }
+
+    constexpr auto operator<=>(GreaterThanToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~GreaterThanToken() final override = default;
+  };
+
+  struct LessThanOrEqualToToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "less than or equal to";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 10;
+    }
+
+    constexpr auto operator<=>(LessThanOrEqualToToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~LessThanOrEqualToToken() final override = default;
+  };
+
+  struct GreaterThanOrEqualToToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "greater than or equal to";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 10;
+    }
+
+    constexpr auto operator<=>(GreaterThanOrEqualToToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~GreaterThanOrEqualToToken() final override = default;
+  };
+
   class Token
   {
     std::shared_ptr<BasicToken> token{};
@@ -600,7 +792,6 @@ namespace SC2 {
       );
     }
 
-
     [[nodiscard]] bool isPercentSign() const noexcept
     {
       return static_cast<bool>(std::dynamic_pointer_cast<PercentSignToken>(token
@@ -660,6 +851,19 @@ namespace SC2 {
     [[nodiscard]] std::shared_ptr<BitwiseXorToken>   getBitwiseXor() const;
     [[nodiscard]] std::shared_ptr<LeftShiftToken>    getLeftShift() const;
     [[nodiscard]] std::shared_ptr<RightShiftToken>   getRightShift() const;
+    [[nodiscard]] std::shared_ptr<ExclamationPointToken>
+    getExclamationPoint() const;
+    [[nodiscard]] std::shared_ptr<DoubleAmpersandToken>
+                                                    getDoubleAmpersand() const;
+    [[nodiscard]] std::shared_ptr<DoublePipeToken>  getDoublePipe() const;
+    [[nodiscard]] std::shared_ptr<EqualToToken>     getEqualTo() const;
+    [[nodiscard]] std::shared_ptr<NotEqualToToken>  getNotEqualTo() const;
+    [[nodiscard]] std::shared_ptr<LessThanToken>    getLessThan() const;
+    [[nodiscard]] std::shared_ptr<GreaterThanToken> getGreaterThan() const;
+    [[nodiscard]] std::shared_ptr<LessThanOrEqualToToken>
+    getLessThanOrEqualTo() const;
+    [[nodiscard]] std::shared_ptr<GreaterThanOrEqualToToken>
+    getGreaterThanOrEqualTo() const;
   };
 
   class TokenConversionError final: public CompilerError
