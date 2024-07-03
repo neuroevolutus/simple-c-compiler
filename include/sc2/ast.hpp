@@ -100,6 +100,20 @@ namespace SC2 {
     virtual ~NegateASTNode() final override = default;
   };
 
+  struct NotASTNode final: public UnaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "!";
+    }
+
+    virtual std::shared_ptr<UnaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~NotASTNode() final override = default;
+  };
+
   class UnaryExpressionASTNode final: public ExpressionASTNode
   {
     std::shared_ptr<UnaryOperatorASTNode> const unary_operator{};
@@ -285,6 +299,118 @@ namespace SC2 {
     emitTACKY() const final override;
 
     virtual ~RightShiftASTNode() final override = default;
+  };
+
+  struct AndASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "&&";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~AndASTNode() final override = default;
+  };
+
+  struct OrASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "||";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~OrASTNode() final override = default;
+  };
+
+  struct EqualsASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "==";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~EqualsASTNode() final override = default;
+  };
+
+  struct NotEqualsASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "!=";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~NotEqualsASTNode() final override = default;
+  };
+
+  struct LessThanASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "<";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~LessThanASTNode() final override = default;
+  };
+
+  struct GreaterThanASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << ">";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~GreaterThanASTNode() final override = default;
+  };
+
+  struct LessThanOrEqualToASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "<=";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~LessThanOrEqualToASTNode() final override = default;
+  };
+
+  struct GreaterThanOrEqualToASTNode final: public BinaryOperatorASTNode
+  {
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << ">=";
+    }
+
+    virtual std::shared_ptr<BinaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~GreaterThanOrEqualToASTNode() final override = default;
   };
 
   class BinaryExpressionASTNode final: public ExpressionASTNode

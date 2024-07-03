@@ -222,6 +222,8 @@ namespace SC2 {
         return std::make_shared<ComplementASTNode>();
       else if (next_token.isHyphen())
         return std::make_shared<NegateASTNode>();
+      else if (next_token.isExclamationPoint())
+        return std::make_shared<NotASTNode>();
       else
         std::unreachable();
     }
@@ -262,6 +264,22 @@ namespace SC2 {
         return std::make_shared<LeftShiftASTNode>();
       else if (next_token.isRightShift())
         return std::make_shared<RightShiftASTNode>();
+      else if (next_token.isDoubleAmpersand())
+        return std::make_shared<AndASTNode>();
+      else if (next_token.isDoublePipe())
+        return std::make_shared<OrASTNode>();
+      else if (next_token.isEqualTo())
+        return std::make_shared<EqualsASTNode>();
+      else if (next_token.isNotEqualTo())
+        return std::make_shared<NotEqualsASTNode>();
+      else if (next_token.isLessThan())
+        return std::make_shared<LessThanASTNode>();
+      else if (next_token.isGreaterThan())
+        return std::make_shared<GreaterThanASTNode>();
+      else if (next_token.isLessThanOrEqualTo())
+        return std::make_shared<LessThanOrEqualToASTNode>();
+      else if (next_token.isGreaterThanOrEqualTo())
+        return std::make_shared<GreaterThanOrEqualToASTNode>();
       else
         std::unreachable();
     }

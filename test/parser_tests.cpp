@@ -206,4 +206,21 @@ TEST_CASE("parser behaves correctly")
       );
     }
   }
+  SECTION("Chapter 4")
+  {
+    constexpr char const * const program_text{
+      "int main(void) {\n"
+      "  return 1 < 2 != 3 > 4 && 5 <= 6 == 7 >= 8 || !2;\n"
+      "}\n"
+    };
+    constexpr char const * const prettified_program_text{
+      "int main(void) {\n"
+      "  return ((((1 < 2) != (3 > 4)) && ((5 <= 6) == (7 >= 8))) || !(2));\n"
+      "}\n"
+    };
+    SC2::Lexer                           lexer{ program_text };
+    SC2::Parser                          parser{ lexer };
+    std::shared_ptr<SC2::ProgramASTNode> program_ast{ parser.parseProgram() };
+    REQUIRE(program_ast->prettyPrint() == prettified_program_text);
+  }
 }

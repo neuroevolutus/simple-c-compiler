@@ -20,6 +20,12 @@ namespace SC2 {
     return std::make_shared<NegateTACKYASTNode>();
   }
 
+  [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
+  NotASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "Not implemented" };
+  }
+
   [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
   LiteralConstantASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput input) const
   {
@@ -107,6 +113,54 @@ namespace SC2 {
   RightShiftASTNode::emitTACKY() const
   {
     return std::make_shared<RightShiftTACKYASTNode>();
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  AndASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  OrASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  EqualsASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  NotEqualsASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  LessThanASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  GreaterThanASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  LessThanOrEqualToASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  GreaterThanOrEqualToASTNode::emitTACKY() const
+  {
+    throw std::runtime_error{ "not implemented" };
   }
 
   [[nodiscard]] ExpressionASTNodeEmitTACKYOutput

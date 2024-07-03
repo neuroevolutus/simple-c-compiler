@@ -515,7 +515,7 @@ namespace SC2 {
     virtual ~RightShiftToken() final override = default;
   };
 
-  struct ExclamationPointToken final: public BasicToken
+  struct ExclamationPointToken final: public UnaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -825,6 +825,62 @@ namespace SC2 {
     [[nodiscard]] bool isRightShift() const noexcept
     {
       return static_cast<bool>(std::dynamic_pointer_cast<RightShiftToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isExclamationPoint() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<ExclamationPointToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isDoubleAmpersand() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<DoubleAmpersandToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isDoublePipe() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<DoublePipeToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isEqualTo() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<EqualToToken>(token));
+    }
+
+    [[nodiscard]] bool isNotEqualTo() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<NotEqualToToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isLessThan() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<LessThanToken>(token));
+    }
+
+    [[nodiscard]] bool isGreaterThan() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<GreaterThanToken>(token
+      ));
+    }
+
+    [[nodiscard]] bool isLessThanOrEqualTo() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<LessThanOrEqualToToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isGreaterThanOrEqualTo() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<GreaterThanOrEqualToToken>(token)
       );
     }
 
