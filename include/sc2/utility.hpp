@@ -39,7 +39,7 @@ namespace SC2 {
     }
 
     [[nodiscard]] static std::string
-    generateFreshIdentifier(std::string_view identifier)
+    generateFreshIdentifierWithPrefix(std::string_view identifier)
     {
       static std::size_t counter{};
       return std::format("{}.{}", identifier, counter++);

@@ -60,7 +60,7 @@ namespace SC2 {
   }
 
   [[nodiscard]] static std::vector<std::shared_ptr<InstructionAssemblyASTNode>>
-  emitDefaultAssemblyForBinaryOperator(
+  emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
     std::shared_ptr<BinaryOperatorAssemblyASTNode> binary_operator,
     BinaryOperatorTACKYASTNodeEmitAssemblyInput  &&input
   )
@@ -87,7 +87,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<AddAssemblyASTNode>(),
       std::move(input)
     );
@@ -98,7 +98,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<SubtractAssemblyASTNode>(),
       std::move(input)
     );
@@ -109,7 +109,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<MultiplyAssemblyASTNode>(),
       std::move(input)
     );
@@ -160,7 +160,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<BitwiseAndAssemblyASTNode>(),
       std::move(input)
     );
@@ -171,7 +171,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<BitwiseOrAssemblyASTNode>(),
       std::move(input)
     );
@@ -182,7 +182,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<BitwiseXorAssemblyASTNode>(),
       std::move(input)
     );
@@ -193,7 +193,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<LeftShiftAssemblyASTNode>(),
       std::move(input)
     );
@@ -204,7 +204,7 @@ namespace SC2 {
     BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
   ) const
   {
-    return emitDefaultAssemblyForBinaryOperator(
+    return emitDefaultAssemblyForBinaryOperatorTACKYASTNode(
       std::make_shared<RightShiftAssemblyASTNode>(),
       std::move(input)
     );
