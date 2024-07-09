@@ -120,6 +120,12 @@ namespace SC2 {
     virtual ~ReturnTACKYASTNode() final override = default;
   };
 
+  struct UnaryOperatorTACKYASTNodeEmitAssemblyInput
+  {
+    std::shared_ptr<ValueTACKYASTNode> const    operand{};
+    std::shared_ptr<VariableTACKYASTNode> const destination{};
+  };
+
   class UnaryOperatorAssemblyASTNode;
   class UnaryOperatorTACKYASTNode: public TACKYASTNode
   {
@@ -127,8 +133,9 @@ namespace SC2 {
     virtual void printUnaryOperator(std::ostream &) = 0;
 
     public:
-    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
-    emitAssembly() const = 0;
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(UnaryOperatorTACKYASTNodeEmitAssemblyInput &&) const = 0;
 
     constexpr virtual void
     prettyPrintHelper(std::ostream &out, std::size_t) final override
@@ -148,8 +155,10 @@ namespace SC2 {
     }
 
     public:
-    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
-    emitAssembly() const final override;
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(UnaryOperatorTACKYASTNodeEmitAssemblyInput &&)
+      const final override;
 
     virtual ~ComplementTACKYASTNode() final override = default;
   };
@@ -163,8 +172,10 @@ namespace SC2 {
     }
 
     public:
-    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
-    emitAssembly() const final override;
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(UnaryOperatorTACKYASTNodeEmitAssemblyInput &&)
+      const final override;
 
     virtual ~NegateTACKYASTNode() final override = default;
   };
@@ -178,11 +189,10 @@ namespace SC2 {
     }
 
     public:
-    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
-    emitAssembly() const final override
-    {
-      throw std::runtime_error{ "Not implemented" };
-    }
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(UnaryOperatorTACKYASTNodeEmitAssemblyInput &&)
+      const final override;
 
     virtual ~NotTACKYASTNode() final override = default;
   };
@@ -192,21 +202,6 @@ namespace SC2 {
     std::shared_ptr<UnaryOperatorTACKYASTNode> unary_operator{};
     std::shared_ptr<ValueTACKYASTNode>         source{};
     std::shared_ptr<VariableTACKYASTNode>      destination{};
-
-    public:
-    UnaryTACKYASTNode(
-      std::shared_ptr<UnaryOperatorTACKYASTNode> unary_operator,
-      std::shared_ptr<ValueTACKYASTNode>         source,
-      std::shared_ptr<VariableTACKYASTNode>      destination
-    )
-      : unary_operator{ unary_operator }
-      , source{ source }
-      , destination{ destination }
-    {}
-
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override;
 
     [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
     getUnaryOperator() const
@@ -223,6 +218,21 @@ namespace SC2 {
     {
       return destination;
     }
+
+    public:
+    UnaryTACKYASTNode(
+      std::shared_ptr<UnaryOperatorTACKYASTNode> unary_operator,
+      std::shared_ptr<ValueTACKYASTNode>         source,
+      std::shared_ptr<VariableTACKYASTNode>      destination
+    )
+      : unary_operator{ unary_operator }
+      , source{ source }
+      , destination{ destination }
+    {}
+
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly() const final override;
 
     virtual void prettyPrintHelper(std::ostream &out, std::size_t indent_level)
       final override
@@ -437,124 +447,110 @@ namespace SC2 {
     virtual ~RightShiftTACKYASTNode() final override = default;
   };
 
-  class EqualsTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  struct CondCodeAssemblyASTNode;
+  class OrderingOperatorTACKYASTNode: public BinaryOperatorTACKYASTNode
   {
     protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const = 0;
+
+    public:
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&input
+    ) const final override;
+
+    virtual ~OrderingOperatorTACKYASTNode() override = default;
+  };
+
+  class EqualsTACKYASTNode final: public OrderingOperatorTACKYASTNode
+  {
+    protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const final override;
+
     virtual constexpr void printBinaryOperator(std::ostream &out) final override
     {
       out << "Equals";
     }
 
     public:
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&)
-      const final override
-    {
-      throw std::runtime_error("Not implemented");
-    }
-
     virtual ~EqualsTACKYASTNode() final override = default;
   };
 
-  class NotEqualsTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  class NotEqualsTACKYASTNode final: public OrderingOperatorTACKYASTNode
   {
     protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const final override;
+
     virtual constexpr void printBinaryOperator(std::ostream &out) final override
     {
       out << "NotEquals";
     }
 
     public:
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&)
-      const final override
-    {
-      throw std::runtime_error("Not implemented");
-    }
-
     virtual ~NotEqualsTACKYASTNode() final override = default;
   };
 
-  class LessThanTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  class LessThanTACKYASTNode final: public OrderingOperatorTACKYASTNode
   {
     protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const final override;
+
     virtual constexpr void printBinaryOperator(std::ostream &out) final override
     {
       out << "LessThan";
     }
 
     public:
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&)
-      const final override
-    {
-      throw std::runtime_error("Not implemented");
-    }
-
     virtual ~LessThanTACKYASTNode() final override = default;
   };
 
-  class GreaterThanTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  class GreaterThanTACKYASTNode final: public OrderingOperatorTACKYASTNode
   {
     protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const final override;
+
     virtual constexpr void printBinaryOperator(std::ostream &out) final override
     {
       out << "GreaterThan";
     }
 
     public:
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&)
-      const final override
-    {
-      throw std::runtime_error("Not implemented");
-    }
-
     virtual ~GreaterThanTACKYASTNode() final override = default;
   };
 
-  class LessThanOrEqualToTACKYASTNode final: public BinaryOperatorTACKYASTNode
+  class LessThanOrEqualToTACKYASTNode final: public OrderingOperatorTACKYASTNode
   {
     protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const final override;
+
     virtual constexpr void printBinaryOperator(std::ostream &out) final override
     {
       out << "LessThanOrEqualTo";
     }
 
     public:
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&)
-      const final override
-    {
-      throw std::runtime_error("Not implemented");
-    }
-
     virtual ~LessThanOrEqualToTACKYASTNode() final override = default;
   };
 
   class GreaterThanOrEqualToTACKYASTNode final
-    : public BinaryOperatorTACKYASTNode
+    : public OrderingOperatorTACKYASTNode
   {
     protected:
+    [[nodiscard]] virtual std::shared_ptr<CondCodeAssemblyASTNode>
+    emitConditionCode() const final override;
+
     virtual constexpr void printBinaryOperator(std::ostream &out) final override
     {
       out << "GreaterThanOrEqualTo";
     }
 
     public:
-    [[nodiscard]] virtual std::vector<
-      std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly(BinaryOperatorTACKYASTNodeEmitAssemblyInput &&)
-      const final override
-    {
-      throw std::runtime_error("Not implemented");
-    }
-
     virtual ~GreaterThanOrEqualToTACKYASTNode() final override = default;
   };
 
@@ -647,10 +643,7 @@ namespace SC2 {
 
     [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override
-    {
-      throw std::runtime_error{ "Not implemented" };
-    }
+    emitAssembly() const final override;
 
     virtual constexpr void prettyPrintHelper(
       std::ostream &out,
@@ -679,10 +672,7 @@ namespace SC2 {
 
     [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override
-    {
-      throw std::runtime_error{ "Not implemented" };
-    }
+    emitAssembly() const final override;
 
     virtual constexpr void prettyPrintHelper(
       std::ostream &out,
@@ -719,10 +709,7 @@ namespace SC2 {
 
     [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override
-    {
-      throw std::runtime_error{ "Not implemented" };
-    }
+    emitAssembly() const final override;
 
     virtual constexpr void prettyPrintHelper(
       std::ostream &out,
@@ -761,10 +748,7 @@ namespace SC2 {
 
     [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override
-    {
-      throw std::runtime_error{ "Not implemented" };
-    }
+    emitAssembly() const final override;
 
     virtual constexpr void prettyPrintHelper(
       std::ostream &out,
@@ -791,10 +775,7 @@ namespace SC2 {
 
     [[nodiscard]] virtual std::vector<
       std::shared_ptr<InstructionAssemblyASTNode>>
-    emitAssembly() const final override
-    {
-      throw std::runtime_error{ "Not implemented" };
-    }
+    emitAssembly() const final override;
 
     virtual constexpr void prettyPrintHelper(
       std::ostream &out,
