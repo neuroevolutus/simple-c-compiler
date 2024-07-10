@@ -1078,9 +1078,14 @@ namespace SC2 {
       std::shared_ptr<InstructionAssemblyASTNode>>
     fixUp() final override;
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      Utility::indent(out, 2);
+      out << "cmpl ";
+      getLeftOperand()->emitCode(out);
+      out << ", ";
+      getRightOperand()->emitCode(out);
+      out << '\n';
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -1110,9 +1115,11 @@ namespace SC2 {
       : identifier{ identifier }
     {}
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      Utility::indent(out, 2);
+      out << "jmp " << Utility::emitLocalLabelPrefix() << getIdentifier()
+          << '\n';
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -1132,9 +1139,9 @@ namespace SC2 {
 
   struct ECondCodeAssemblyASTNode final: public CondCodeAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << 'e';
     }
 
     virtual constexpr void
@@ -1146,9 +1153,9 @@ namespace SC2 {
 
   struct NECondCodeAssemblyASTNode final: public CondCodeAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << "ne";
     }
 
     virtual constexpr void
@@ -1160,9 +1167,9 @@ namespace SC2 {
 
   struct GCondCodeAssemblyASTNode final: public CondCodeAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << 'g';
     }
 
     virtual constexpr void
@@ -1174,9 +1181,9 @@ namespace SC2 {
 
   struct GECondCodeAssemblyASTNode final: public CondCodeAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << "ge";
     }
 
     virtual constexpr void
@@ -1188,9 +1195,9 @@ namespace SC2 {
 
   struct LCondCodeAssemblyASTNode final: public CondCodeAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << 'l';
     }
 
     virtual constexpr void
@@ -1202,9 +1209,9 @@ namespace SC2 {
 
   struct LECondCodeAssemblyASTNode final: public CondCodeAssemblyASTNode
   {
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << "le";
     }
 
     virtual constexpr void
@@ -1236,9 +1243,11 @@ namespace SC2 {
       , identifier{ identifier }
     {}
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << 'j';
+      getConditionCode()->emitCode(out);
+      out << ' ' << Utility::emitLocalLabelPrefix() << getIdentifier() << '\n';
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -1299,9 +1308,13 @@ namespace SC2 {
       std::shared_ptr<InstructionAssemblyASTNode>>
     fixUp() final override;
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << "set";
+      getConditionCode()->emitCode(out);
+      out << ' ';
+      getDestination()->emitCode(out);
+      out << '\n';
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -1331,9 +1344,9 @@ namespace SC2 {
       : identifier{ identifier }
     {}
 
-    virtual constexpr void emitCode(std::ostream &) final override
+    virtual constexpr void emitCode(std::ostream &out) final override
     {
-      throw std::runtime_error{ "Not implemented" };
+      out << Utility::emitLocalLabelPrefix() << getIdentifier() << ":\n";
     }
 
     virtual constexpr void prettyPrintHelper(
@@ -1342,7 +1355,7 @@ namespace SC2 {
     ) final override
     {
       Utility::indent(out, indent_level);
-      out << "Label " << getIdentifier() << "\n";
+      out << "Label " << getIdentifier() << '\n';
     }
 
     virtual ~LabelAssemblyASTNode() final override = default;

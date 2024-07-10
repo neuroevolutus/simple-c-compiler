@@ -26,6 +26,17 @@ namespace SC2 {
 #endif
     }
 
+    [[nodiscard]] static constexpr std::string emitLocalLabelPrefix()
+    {
+      return
+#if defined(__APPLE__) || defined(__MACH__)
+        "L"
+#else
+        ".L"
+#endif
+        ;
+    }
+
     [[nodiscard]] static constexpr std::string
     specialiseFunctionNameForOS(std::string_view name)
     {
