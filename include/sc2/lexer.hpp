@@ -81,6 +81,18 @@ namespace SC2 {
     static std::regex greater_than_regex;
     static std::regex less_than_or_equal_to_regex;
     static std::regex greater_than_or_equal_to_regex;
+    static std::regex assignment_regex;
+    static std::regex add_assignment_regex;
+    static std::regex subtract_assignment_regex;
+    static std::regex multiply_assignment_regex;
+    static std::regex divide_assignment_regex;
+    static std::regex modulo_assignment_regex;
+    static std::regex bitwise_and_assignment_regex;
+    static std::regex bitwise_or_assignment_regex;
+    static std::regex bitwise_xor_assignment_regex;
+    static std::regex left_shift_assignment_regex;
+    static std::regex right_shift_assignment_regex;
+    static std::regex increment_regex;
 
     std::string program_text{};
     Token       current_token;
@@ -172,6 +184,18 @@ namespace SC2 {
         std::cmatch greater_than_regex_match{};
         std::cmatch less_than_or_equal_to_regex_match{};
         std::cmatch greater_than_or_equal_to_regex_match{};
+        std::cmatch assignment_regex_match{};
+        std::cmatch add_assignment_regex_match{};
+        std::cmatch subtract_assignment_regex_match{};
+        std::cmatch multiply_assignment_regex_match{};
+        std::cmatch divide_assignment_regex_match{};
+        std::cmatch modulo_assignment_regex_match{};
+        std::cmatch bitwise_and_assignment_regex_match{};
+        std::cmatch bitwise_or_assignment_regex_match{};
+        std::cmatch bitwise_xor_assignment_regex_match{};
+        std::cmatch left_shift_assignment_regex_match{};
+        std::cmatch right_shift_assignment_regex_match{};
+        std::cmatch increment_regex_match{};
         std::regex_search(
           program_text.c_str(),
           program_text.c_str() + program_text.size(),
@@ -328,7 +352,79 @@ namespace SC2 {
           greater_than_or_equal_to_regex_match,
           greater_than_or_equal_to_regex
         );
-        std::array<std::cmatch::difference_type, 26> const match_sizes{
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          assignment_regex_match,
+          assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          add_assignment_regex_match,
+          add_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          subtract_assignment_regex_match,
+          subtract_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          multiply_assignment_regex_match,
+          multiply_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          divide_assignment_regex_match,
+          divide_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          modulo_assignment_regex_match,
+          modulo_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          bitwise_and_assignment_regex_match,
+          bitwise_and_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          bitwise_or_assignment_regex_match,
+          bitwise_or_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          bitwise_xor_assignment_regex_match,
+          bitwise_xor_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          left_shift_assignment_regex_match,
+          left_shift_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          right_shift_assignment_regex_match,
+          right_shift_assignment_regex
+        );
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          increment_regex_match,
+          increment_regex
+        );
+        std::array<std::cmatch::difference_type, 38> const match_sizes{
           identifier_regex_match.length(),
           literal_constant_regex_match.length(),
           parenthesis_regex_match.length(),
@@ -354,7 +450,19 @@ namespace SC2 {
           less_than_regex_match.length(),
           greater_than_regex_match.length(),
           less_than_or_equal_to_regex_match.length(),
-          greater_than_or_equal_to_regex_match.length()
+          greater_than_or_equal_to_regex_match.length(),
+          assignment_regex_match.length(),
+          add_assignment_regex_match.length(),
+          subtract_assignment_regex_match.length(),
+          multiply_assignment_regex_match.length(),
+          divide_assignment_regex_match.length(),
+          modulo_assignment_regex_match.length(),
+          bitwise_and_assignment_regex_match.length(),
+          bitwise_or_assignment_regex_match.length(),
+          bitwise_xor_assignment_regex_match.length(),
+          left_shift_assignment_regex_match.length(),
+          right_shift_assignment_regex_match.length(),
+          increment_regex_match.length()
         };
         std::cmatch::difference_type const largest_match_size{
           match_sizes[std::ranges::distance(
@@ -372,6 +480,8 @@ namespace SC2 {
             current_token = Token(std::make_shared<ReturnKeywordToken>());
           } else if (identifier == "void") {
             current_token = Token(std::make_shared<VoidKeywordToken>());
+          } else if (identifier == "typedef") {
+            current_token = Token(std::make_shared<TypedefKeywordToken>());
           } else
             current_token
               = Token(std::make_shared<IdentifierToken>(identifier));
@@ -463,6 +573,39 @@ namespace SC2 {
         } else if (greater_than_or_equal_to_regex_match.length()
                    == largest_match_size) {
           current_token = Token(std::make_shared<GreaterThanOrEqualToToken>());
+        } else if (assignment_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<AssignmentToken>());
+        } else if (add_assignment_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<AddAssignmentToken>());
+        } else if (subtract_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<SubtractAssignmentToken>());
+        } else if (multiply_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<MultiplyAssignmentToken>());
+        } else if (divide_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<DivideAssignmentToken>());
+        } else if (modulo_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<ModuloAssignmentToken>());
+        } else if (bitwise_and_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<BitwiseAndAssignmentToken>());
+        } else if (bitwise_or_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<BitwiseOrAssignmentToken>());
+        } else if (bitwise_xor_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<BitwiseXorAssignmentToken>());
+        } else if (left_shift_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<LeftShiftAssignmentToken>());
+        } else if (right_shift_assignment_regex_match.length()
+                   == largest_match_size) {
+          current_token = Token(std::make_shared<RightShiftAssignmentToken>());
+        } else if (increment_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<IncrementToken>());
         } else
           std::unreachable();
         program_text.erase(0, largest_match_size);

@@ -127,4 +127,64 @@ namespace SC2 {
     "^>=",
     std::regex::ECMAScript | std::regex::optimize
   );
+
+  std::regex Lexer::assignment_regex(
+    "^=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::add_assignment_regex(
+    "^\\+=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::subtract_assignment_regex(
+    "^-=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::multiply_assignment_regex(
+    "^\\*=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::divide_assignment_regex(
+    "^/=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::modulo_assignment_regex(
+    "^%=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::bitwise_and_assignment_regex(
+    "^&=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::bitwise_or_assignment_regex(
+    "^\\|=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::bitwise_xor_assignment_regex(
+    "^\\^=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::left_shift_assignment_regex(
+    "^<<=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::right_shift_assignment_regex(
+    "^>>=",
+    std::regex::ECMAScript | std::regex::optimize
+  );
+
+  std::regex Lexer::increment_regex(
+    "^\\+\\+",
+    std::regex::ECMAScript | std::regex::optimize
+  );
 } // namespace SC2

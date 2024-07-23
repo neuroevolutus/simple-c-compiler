@@ -46,6 +46,15 @@ namespace SC2 {
       throw TokenConversionError(*this, "void keyword");
   }
 
+  [[nodiscard]] std::shared_ptr<TypedefKeywordToken>
+  Token::getTypedefKeyword() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<TypedefKeywordToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "typedef keyword");
+  }
+
   [[nodiscard]] std::shared_ptr<ParenthesisToken>
   Token::getLeftParenthesis() const
   {
@@ -268,5 +277,120 @@ namespace SC2 {
       return ptr;
     else
       throw TokenConversionError(*this, "greater than or equal to");
+  }
+
+  [[nodiscard]] std::shared_ptr<AssignmentToken> Token::getAssignment() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<AssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<AddAssignmentToken>
+  Token::getAddAssignment() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<AddAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "add assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<SubtractAssignmentToken>
+  Token::getSubtractAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<SubtractAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "subtract assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<MultiplyAssignmentToken>
+  Token::getMultiplyAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<MultiplyAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "multiply assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<DivideAssignmentToken>
+  Token::getDivideAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<DivideAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "divide assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<ModuloAssignmentToken>
+  Token::getModuloAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<ModuloAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "modulo assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<BitwiseAndAssignmentToken>
+  Token::getBitwiseAndAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<BitwiseAndAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "bitwise and assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<BitwiseOrAssignmentToken>
+  Token::getBitwiseOrAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<BitwiseOrAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "bitwise or assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<BitwiseXorAssignmentToken>
+  Token::getBitwiseXorAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<BitwiseXorAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "bitwise xor assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<LeftShiftAssignmentToken>
+  Token::getLeftShiftAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<LeftShiftAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "left shift assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<RightShiftAssignmentToken>
+  Token::getRightShiftAssignment() const
+  {
+    if (auto const ptr{
+          std::dynamic_pointer_cast<RightShiftAssignmentToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "right shift assignment");
+  }
+
+  [[nodiscard]] std::shared_ptr<IncrementToken> Token::getIncrement() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<IncrementToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "increment");
   }
 } // namespace SC2

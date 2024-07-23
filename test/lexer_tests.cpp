@@ -248,4 +248,49 @@ TEST_CASE("lexer behaves correctly")
       );
     }
   }
+  SECTION("Chapter 5")
+  {
+    SECTION("Assignment operators are correctly lexed")
+    {
+      SC2::Lexer              lexer{ "= += -= *= /= %= &= |= ^= <<= >>=" };
+      std::vector<SC2::Token> tokens{};
+      for (auto const &token: lexer) { tokens.push_back(token); }
+      REQUIRE(*tokens[0].getAssignment() == SC2::AssignmentToken{});
+      REQUIRE(*tokens[1].getAddAssignment() == SC2::AddAssignmentToken{});
+      REQUIRE(
+        *tokens[2].getSubtractAssignment() == SC2::SubtractAssignmentToken{}
+      );
+      REQUIRE(
+        *tokens[3].getMultiplyAssignment() == SC2::MultiplyAssignmentToken{}
+      );
+      REQUIRE(*tokens[4].getDivideAssignment() == SC2::DivideAssignmentToken{});
+      REQUIRE(*tokens[5].getModuloAssignment() == SC2::ModuloAssignmentToken{});
+      REQUIRE(
+        *tokens[6].getBitwiseAndAssignment() == SC2::BitwiseAndAssignmentToken{}
+      );
+      REQUIRE(
+        *tokens[7].getBitwiseOrAssignment() == SC2::BitwiseOrAssignmentToken{}
+      );
+      REQUIRE(
+        *tokens[8].getBitwiseXorAssignment() == SC2::BitwiseXorAssignmentToken{}
+      );
+      REQUIRE(
+        *tokens[9].getLeftShiftAssignment() == SC2::LeftShiftAssignmentToken{}
+      );
+      REQUIRE(
+        *tokens[10].getRightShiftAssignment()
+        == SC2::RightShiftAssignmentToken{}
+      );
+    }
+    SECTION("Increment is correctly lexed")
+    {
+      SC2::Lexer lexer{ "++" };
+      REQUIRE(*(*lexer).getIncrement() == SC2::IncrementToken{});
+    }
+    SECTION("typedef keyword is correctly lexed")
+    {
+      SC2::Lexer lexer{ "typedef" };
+      REQUIRE(*(*lexer).getTypedefKeyword() == SC2::TypedefKeywordToken{});
+    }
+  }
 }

@@ -161,6 +161,19 @@ namespace SC2 {
     virtual ~VoidKeywordToken() final override = default;
   };
 
+  class TypedefKeywordToken final: public KeywordToken
+  {
+    protected:
+    [[nodiscard]] virtual constexpr std::string
+    getKeyword() const final override
+    {
+      return "typedef";
+    }
+
+    public:
+    virtual ~TypedefKeywordToken() final override = default;
+  };
+
   struct ParenthesisToken: public BasicToken
   {
     virtual ~ParenthesisToken() override = default;
@@ -289,6 +302,22 @@ namespace SC2 {
     }
 
     virtual ~HyphenToken() final override = default;
+  };
+
+  struct IncrementToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "increment";
+    }
+
+    constexpr auto operator<=>(IncrementToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~IncrementToken() final override = default;
   };
 
   struct DecrementToken final: public BasicToken
@@ -707,6 +736,248 @@ namespace SC2 {
     virtual ~GreaterThanOrEqualToToken() final override = default;
   };
 
+  struct AssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(AssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~AssignmentToken() final override = default;
+  };
+
+  struct AddAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "add assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(AddAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~AddAssignmentToken() final override = default;
+  };
+
+  struct SubtractAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "subtract assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(SubtractAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~SubtractAssignmentToken() final override = default;
+  };
+
+  struct MultiplyAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "multiply assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(MultiplyAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~MultiplyAssignmentToken() final override = default;
+  };
+
+  struct DivideAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "divide assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(DivideAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~DivideAssignmentToken() final override = default;
+  };
+
+  struct ModuloAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "modulo assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(ModuloAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~ModuloAssignmentToken() final override = default;
+  };
+
+  struct BitwiseAndAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "bitwise and assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(BitwiseAndAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~BitwiseAndAssignmentToken() final override = default;
+  };
+
+  struct BitwiseOrAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "bitwise or assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(BitwiseOrAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~BitwiseOrAssignmentToken() final override = default;
+  };
+
+  struct BitwiseXorAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "bitwise xor assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(BitwiseXorAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~BitwiseXorAssignmentToken() final override = default;
+  };
+
+  struct LeftShiftAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "left shift assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(LeftShiftAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~LeftShiftAssignmentToken() final override = default;
+  };
+
+  struct RightShiftAssignmentToken final: public BinaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "right shift assignment";
+    }
+
+    [[nodiscard]] virtual constexpr std::size_t
+    getPrecedence() const noexcept final override
+    {
+      return 2;
+    }
+
+    constexpr auto operator<=>(RightShiftAssignmentToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~RightShiftAssignmentToken() final override = default;
+  };
+
   class Token
   {
     std::shared_ptr<BasicToken> token{};
@@ -890,6 +1161,8 @@ namespace SC2 {
     [[nodiscard]] std::shared_ptr<IntKeywordToken> getIntKeyword() const;
     [[nodiscard]] std::shared_ptr<ReturnKeywordToken> getReturnKeyword() const;
     [[nodiscard]] std::shared_ptr<VoidKeywordToken>   getVoidKeyword() const;
+    [[nodiscard]] std::shared_ptr<TypedefKeywordToken>
+                                                    getTypedefKeyword() const;
     [[nodiscard]] std::shared_ptr<ParenthesisToken> getLeftParenthesis() const;
     [[nodiscard]] std::shared_ptr<ParenthesisToken> getRightParenthesis() const;
     [[nodiscard]] std::shared_ptr<CurlyBraceToken>  getLeftCurlyBrace() const;
@@ -920,6 +1193,27 @@ namespace SC2 {
     getLessThanOrEqualTo() const;
     [[nodiscard]] std::shared_ptr<GreaterThanOrEqualToToken>
     getGreaterThanOrEqualTo() const;
+    [[nodiscard]] std::shared_ptr<AssignmentToken>    getAssignment() const;
+    [[nodiscard]] std::shared_ptr<AddAssignmentToken> getAddAssignment() const;
+    [[nodiscard]] std::shared_ptr<SubtractAssignmentToken>
+    getSubtractAssignment() const;
+    [[nodiscard]] std::shared_ptr<MultiplyAssignmentToken>
+    getMultiplyAssignment() const;
+    [[nodiscard]] std::shared_ptr<DivideAssignmentToken>
+    getDivideAssignment() const;
+    [[nodiscard]] std::shared_ptr<ModuloAssignmentToken>
+    getModuloAssignment() const;
+    [[nodiscard]] std::shared_ptr<BitwiseAndAssignmentToken>
+    getBitwiseAndAssignment() const;
+    [[nodiscard]] std::shared_ptr<BitwiseOrAssignmentToken>
+    getBitwiseOrAssignment() const;
+    [[nodiscard]] std::shared_ptr<BitwiseXorAssignmentToken>
+    getBitwiseXorAssignment() const;
+    [[nodiscard]] std::shared_ptr<LeftShiftAssignmentToken>
+    getLeftShiftAssignment() const;
+    [[nodiscard]] std::shared_ptr<RightShiftAssignmentToken>
+    getRightShiftAssignment() const;
+    [[nodiscard]] std::shared_ptr<IncrementToken> getIncrement() const;
   };
 
   class TokenConversionError final: public CompilerError
