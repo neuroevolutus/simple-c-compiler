@@ -19,7 +19,12 @@ namespace SC2 {
       return typeid(*this) == typeid(other);
     }
 
-    [[nodiscard]] virtual bool isUnaryOperatorToken() const noexcept
+    [[nodiscard]] virtual bool isPrefixUnaryOperatorToken() const noexcept
+    {
+      return false;
+    }
+
+    [[nodiscard]] virtual bool isPostfixUnaryOperatorToken() const noexcept
     {
       return false;
     }
@@ -120,9 +125,18 @@ namespace SC2 {
     {
       return std::format("Keyword: {}", getKeyword());
     }
+
+    virtual ~KeywordToken() override = default;
   };
 
-  class IntKeywordToken final: public KeywordToken
+  struct TypeToken: virtual public KeywordToken
+  {
+    virtual ~TypeToken() override = default;
+  };
+
+  class IntKeywordToken final
+    : virtual public KeywordToken
+    , public TypeToken
   {
     protected:
     [[nodiscard]] virtual constexpr std::string
@@ -148,7 +162,9 @@ namespace SC2 {
     virtual ~ReturnKeywordToken() final override = default;
   };
 
-  class VoidKeywordToken final: public KeywordToken
+  class VoidKeywordToken final
+    : virtual public KeywordToken
+    , public TypeToken
   {
     protected:
     [[nodiscard]] virtual constexpr std::string
@@ -242,16 +258,21 @@ namespace SC2 {
 
   struct UnaryOperatorToken: virtual public BasicToken
   {
+    virtual ~UnaryOperatorToken() override = default;
+  };
+
+  struct PrefixUnaryOperatorToken: public UnaryOperatorToken
+  {
     [[nodiscard]] virtual constexpr bool
-    isUnaryOperatorToken() const noexcept final override
+    isPrefixUnaryOperatorToken() const noexcept final override
     {
       return true;
     };
 
-    virtual ~UnaryOperatorToken() override = default;
+    virtual ~PrefixUnaryOperatorToken() = default;
   };
 
-  struct TildeToken final: public UnaryOperatorToken
+  struct TildeToken final: public PrefixUnaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -281,7 +302,7 @@ namespace SC2 {
   };
 
   struct HyphenToken final
-    : public UnaryOperatorToken
+    : public PrefixUnaryOperatorToken
     , public BinaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
@@ -304,7 +325,20 @@ namespace SC2 {
     virtual ~HyphenToken() final override = default;
   };
 
-  struct IncrementToken final: public BasicToken
+  struct PostfixUnaryOperatorToken: public UnaryOperatorToken
+  {
+    [[nodiscard]] virtual constexpr bool
+    isPostfixUnaryOperatorToken() const noexcept final override
+    {
+      return true;
+    };
+
+    virtual ~PostfixUnaryOperatorToken() = default;
+  };
+
+  struct IncrementToken final
+    : public PrefixUnaryOperatorToken
+    , public PostfixUnaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -320,7 +354,25 @@ namespace SC2 {
     virtual ~IncrementToken() final override = default;
   };
 
-  struct DecrementToken final: public BasicToken
+  struct CommaToken final: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "comma";
+    }
+
+    constexpr auto operator<=>(CommaToken const &) const
+    {
+      return std::strong_ordering::equal;
+    }
+
+    virtual ~CommaToken() final override = default;
+  };
+
+  struct DecrementToken final
+    : public PrefixUnaryOperatorToken
+    , public PostfixUnaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -544,7 +596,7 @@ namespace SC2 {
     virtual ~RightShiftToken() final override = default;
   };
 
-  struct ExclamationPointToken final: public UnaryOperatorToken
+  struct ExclamationPointToken final: public PrefixUnaryOperatorToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -736,7 +788,12 @@ namespace SC2 {
     virtual ~GreaterThanOrEqualToToken() final override = default;
   };
 
-  struct AssignmentToken final: public BinaryOperatorToken
+  struct BasicAssignmentToken: public BinaryOperatorToken
+  {
+    virtual ~BasicAssignmentToken() override = default;
+  };
+
+  struct AssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -758,7 +815,7 @@ namespace SC2 {
     virtual ~AssignmentToken() final override = default;
   };
 
-  struct AddAssignmentToken final: public BinaryOperatorToken
+  struct AddAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -780,7 +837,7 @@ namespace SC2 {
     virtual ~AddAssignmentToken() final override = default;
   };
 
-  struct SubtractAssignmentToken final: public BinaryOperatorToken
+  struct SubtractAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -802,7 +859,7 @@ namespace SC2 {
     virtual ~SubtractAssignmentToken() final override = default;
   };
 
-  struct MultiplyAssignmentToken final: public BinaryOperatorToken
+  struct MultiplyAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -824,7 +881,7 @@ namespace SC2 {
     virtual ~MultiplyAssignmentToken() final override = default;
   };
 
-  struct DivideAssignmentToken final: public BinaryOperatorToken
+  struct DivideAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -846,7 +903,7 @@ namespace SC2 {
     virtual ~DivideAssignmentToken() final override = default;
   };
 
-  struct ModuloAssignmentToken final: public BinaryOperatorToken
+  struct ModuloAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -868,7 +925,7 @@ namespace SC2 {
     virtual ~ModuloAssignmentToken() final override = default;
   };
 
-  struct BitwiseAndAssignmentToken final: public BinaryOperatorToken
+  struct BitwiseAndAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -890,7 +947,7 @@ namespace SC2 {
     virtual ~BitwiseAndAssignmentToken() final override = default;
   };
 
-  struct BitwiseOrAssignmentToken final: public BinaryOperatorToken
+  struct BitwiseOrAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -912,7 +969,7 @@ namespace SC2 {
     virtual ~BitwiseOrAssignmentToken() final override = default;
   };
 
-  struct BitwiseXorAssignmentToken final: public BinaryOperatorToken
+  struct BitwiseXorAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -934,7 +991,7 @@ namespace SC2 {
     virtual ~BitwiseXorAssignmentToken() final override = default;
   };
 
-  struct LeftShiftAssignmentToken final: public BinaryOperatorToken
+  struct LeftShiftAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -956,7 +1013,7 @@ namespace SC2 {
     virtual ~LeftShiftAssignmentToken() final override = default;
   };
 
-  struct RightShiftAssignmentToken final: public BinaryOperatorToken
+  struct RightShiftAssignmentToken final: public BasicAssignmentToken
   {
     [[nodiscard]] virtual constexpr std::string
     toString() const noexcept final override
@@ -1001,9 +1058,14 @@ namespace SC2 {
       return token->toString();
     }
 
-    [[nodiscard]] constexpr bool isUnaryOperatorToken() const
+    [[nodiscard]] constexpr bool isPrefixUnaryOperatorToken() const
     {
-      return token->isUnaryOperatorToken();
+      return token->isPrefixUnaryOperatorToken();
+    }
+
+    [[nodiscard]] constexpr bool isPostfixUnaryOperatorToken() const
+    {
+      return token->isPostfixUnaryOperatorToken();
     }
 
     [[nodiscard]] constexpr bool isBinaryOperatorToken() const
@@ -1024,6 +1086,61 @@ namespace SC2 {
       );
     }
 
+    [[nodiscard]] bool isSemicolon() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<SemicolonToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isRightCurlyBrace() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<RightCurlyBraceToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isIdentifier() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<IdentifierToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isType() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<TypeToken>(token));
+    }
+
+    [[nodiscard]] bool isKeyword() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<KeywordToken>(token));
+    }
+
+    [[nodiscard]] bool isIntKeyword() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<IntKeywordToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isVoidKeyword() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<VoidKeywordToken>(token
+      ));
+    }
+
+    [[nodiscard]] bool isReturnKeyword() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<ReturnKeywordToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isTypedefKeyword() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<TypedefKeywordToken>(token)
+      );
+    }
+
     [[nodiscard]] bool isTilde() const noexcept
     {
       return static_cast<bool>(std::dynamic_pointer_cast<TildeToken>(token));
@@ -1040,10 +1157,23 @@ namespace SC2 {
       );
     }
 
+    [[nodiscard]] bool isIncrement() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<IncrementToken>(token)
+      );
+    }
+
     [[nodiscard]] bool isParenthesis() const noexcept
     {
       return static_cast<bool>(std::dynamic_pointer_cast<ParenthesisToken>(token
       ));
+    }
+
+    [[nodiscard]] bool isRightParenthesis() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<RightParenthesisToken>(token)
+      );
     }
 
     [[nodiscard]] bool isPlusSign() const noexcept
@@ -1155,9 +1285,93 @@ namespace SC2 {
       );
     }
 
+    [[nodiscard]] bool isBasicAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<BasicAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isAssignment() const noexcept
+    {
+      return static_cast<bool>(std::dynamic_pointer_cast<AssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isAddAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<AddAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isSubtractAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<SubtractAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isMultiplyAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<MultiplyAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isDivideAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<DivideAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isModuloAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<ModuloAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isBitwiseAndAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<BitwiseAndAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isBitwiseOrAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<BitwiseOrAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isBitwiseXorAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<BitwiseXorAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isLeftShiftAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<LeftShiftAssignmentToken>(token)
+      );
+    }
+
+    [[nodiscard]] bool isRightShiftAssignment() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<RightShiftAssignmentToken>(token)
+      );
+    }
+
     [[nodiscard]] std::shared_ptr<IdentifierToken> getIdentifier() const;
     [[nodiscard]] std::shared_ptr<LiteralConstantToken>
                                                    getLiteralConstant() const;
+    [[nodiscard]] std::shared_ptr<KeywordToken>    getKeyword() const;
     [[nodiscard]] std::shared_ptr<IntKeywordToken> getIntKeyword() const;
     [[nodiscard]] std::shared_ptr<ReturnKeywordToken> getReturnKeyword() const;
     [[nodiscard]] std::shared_ptr<VoidKeywordToken>   getVoidKeyword() const;
@@ -1214,6 +1428,7 @@ namespace SC2 {
     [[nodiscard]] std::shared_ptr<RightShiftAssignmentToken>
     getRightShiftAssignment() const;
     [[nodiscard]] std::shared_ptr<IncrementToken> getIncrement() const;
+    [[nodiscard]] std::shared_ptr<CommaToken>     getComma() const;
   };
 
   class TokenConversionError final: public CompilerError

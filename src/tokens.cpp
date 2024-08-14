@@ -21,6 +21,14 @@ namespace SC2 {
       throw TokenConversionError(*this, "literal constant");
   }
 
+  [[nodiscard]] std::shared_ptr<KeywordToken> Token::getKeyword() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<KeywordToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "keyword");
+  }
+
   [[nodiscard]] std::shared_ptr<IntKeywordToken> Token::getIntKeyword() const
   {
     if (auto const ptr{ std::dynamic_pointer_cast<IntKeywordToken>(token) })
@@ -392,5 +400,13 @@ namespace SC2 {
       return ptr;
     else
       throw TokenConversionError(*this, "increment");
+  }
+
+  [[nodiscard]] std::shared_ptr<CommaToken> Token::getComma() const
+  {
+    if (auto const ptr{ std::dynamic_pointer_cast<CommaToken>(token) })
+      return ptr;
+    else
+      throw TokenConversionError(*this, "comma");
   }
 } // namespace SC2

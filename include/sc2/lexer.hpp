@@ -93,6 +93,7 @@ namespace SC2 {
     static std::regex left_shift_assignment_regex;
     static std::regex right_shift_assignment_regex;
     static std::regex increment_regex;
+    static std::regex comma_regex;
 
     std::string program_text{};
     Token       current_token;
@@ -196,6 +197,7 @@ namespace SC2 {
         std::cmatch left_shift_assignment_regex_match{};
         std::cmatch right_shift_assignment_regex_match{};
         std::cmatch increment_regex_match{};
+        std::cmatch comma_regex_match{};
         std::regex_search(
           program_text.c_str(),
           program_text.c_str() + program_text.size(),
@@ -424,7 +426,13 @@ namespace SC2 {
           increment_regex_match,
           increment_regex
         );
-        std::array<std::cmatch::difference_type, 38> const match_sizes{
+        std::regex_search(
+          program_text.c_str(),
+          program_text.c_str() + program_text.size(),
+          comma_regex_match,
+          comma_regex
+        );
+        std::array<std::cmatch::difference_type, 39> const match_sizes{
           identifier_regex_match.length(),
           literal_constant_regex_match.length(),
           parenthesis_regex_match.length(),
@@ -462,7 +470,8 @@ namespace SC2 {
           bitwise_xor_assignment_regex_match.length(),
           left_shift_assignment_regex_match.length(),
           right_shift_assignment_regex_match.length(),
-          increment_regex_match.length()
+          increment_regex_match.length(),
+          comma_regex_match.length()
         };
         std::cmatch::difference_type const largest_match_size{
           match_sizes[std::ranges::distance(
@@ -606,6 +615,8 @@ namespace SC2 {
           current_token = Token(std::make_shared<RightShiftAssignmentToken>());
         } else if (increment_regex_match.length() == largest_match_size) {
           current_token = Token(std::make_shared<IncrementToken>());
+        } else if (comma_regex_match.length() == largest_match_size) {
+          current_token = Token(std::make_shared<CommaToken>());
         } else
           std::unreachable();
         program_text.erase(0, largest_match_size);

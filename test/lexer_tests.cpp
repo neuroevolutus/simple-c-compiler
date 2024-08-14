@@ -292,5 +292,10 @@ TEST_CASE("lexer behaves correctly")
       SC2::Lexer lexer{ "typedef" };
       REQUIRE(*(*lexer).getTypedefKeyword() == SC2::TypedefKeywordToken{});
     }
+    SECTION("comma is correctly lexed")
+    {
+      SC2::Lexer lexer{ "," };
+      REQUIRE(*(*lexer).getComma() == SC2::CommaToken{});
+    }
   }
 }

@@ -187,4 +187,7 @@ namespace SC2 {
     "^\\+\\+",
     std::regex::ECMAScript | std::regex::optimize
   );
+
+  std::regex
+    Lexer::comma_regex("^,", std::regex::ECMAScript | std::regex::optimize);
 } // namespace SC2
