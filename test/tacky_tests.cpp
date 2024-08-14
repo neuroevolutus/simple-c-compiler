@@ -10,7 +10,7 @@
 
 TEST_CASE("tacky emitter behaves correctly")
 {
-  SECTION("a basic program is correctly translated")
+  SECTION("Chapter 2: a basic program is correctly translated")
   {
     constexpr char const * const program_text_zero{
       "int main(void) {\n"

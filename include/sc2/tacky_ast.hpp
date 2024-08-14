@@ -1,13 +1,18 @@
 #ifndef TACKY_AST_HPP_INCLUDED
 #define TACKY_AST_HPP_INCLUDED
 
+#include <sc2/assembly_ast.hpp>
 #include <sc2/ast.hpp>
 #include <sc2/pretty_printer_mixin.hpp>
-#include <sc2/tokens.hpp>
 #include <sc2/utility.hpp>
+#include <string_view>
 
+#include <cstdint>
 #include <cstdlib>
+#include <iterator>
 #include <memory>
+#include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -21,156 +26,276 @@ namespace SC2 {
 
   struct ValueTACKYASTNode: public TACKYASTNode
   {
+    [[nodiscard]] virtual std::shared_ptr<OperandAssemblyASTNode>
+    emitAssembly() const                  = 0;
     virtual ~ValueTACKYASTNode() override = default;
   };
 
-  class LiteralConstantTACKYASTNode: public ValueTACKYASTNode
+  class LiteralConstantTACKYASTNode final: public ValueTACKYASTNode
   {
-    LiteralConstant const literal_constant{};
+    int const value{};
 
     public:
-    explicit constexpr LiteralConstantTACKYASTNode(
-      LiteralConstant const literal_constant
-    )
-      : literal_constant{ literal_constant }
-    {}
+    explicit constexpr LiteralConstantTACKYASTNode(int value): value{ value } {}
+
+    [[nodiscard]] constexpr int getValue() const noexcept { return value; }
+
+    [[nodiscard]] virtual std::shared_ptr<OperandAssemblyASTNode>
+    emitAssembly() const final override;
 
     virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
-      out << "LiteralConstant(" << literal_constant.getValue() << ')';
+      out << "LiteralConstant(" << getValue() << ')';
     }
 
-    virtual ~LiteralConstantTACKYASTNode() override = default;
+    virtual ~LiteralConstantTACKYASTNode() final override = default;
   };
 
-  class VariableTACKYASTNode: public ValueTACKYASTNode
+  class VariableTACKYASTNode final: public ValueTACKYASTNode
   {
-    Identifier const identifier{};
+    std::string const identifier{};
 
     public:
-    explicit constexpr VariableTACKYASTNode(Identifier const identifier)
+    explicit constexpr VariableTACKYASTNode(std::string_view identifier)
       : identifier{ identifier }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    [[nodiscard]] std::shared_ptr<OperandAssemblyASTNode>
+    emitAssembly() const final override;
+
+    [[nodiscard]] constexpr std::string_view getIdentifier() const noexcept
     {
-      out << "Variable(\"" << identifier.getName() << "\")";
+      return identifier;
     }
 
-    virtual ~VariableTACKYASTNode() override = default;
+    virtual constexpr void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      out << "Variable(\"" << getIdentifier() << "\")";
+    }
+
+    virtual ~VariableTACKYASTNode() final override = default;
   };
 
+  struct InstructionAssemblyASTNode;
   struct InstructionTACKYASTNode: public TACKYASTNode
   {
+    [[nodiscard]] virtual constexpr std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly() const = 0;
+
     virtual ~InstructionTACKYASTNode() override = default;
   };
 
-  class ReturnTACKYASTNode: public InstructionTACKYASTNode
+  class ReturnTACKYASTNode final: public InstructionTACKYASTNode
   {
     std::shared_ptr<ValueTACKYASTNode> value{};
 
     public:
-    explicit constexpr ReturnTACKYASTNode(
-      std::shared_ptr<ValueTACKYASTNode> value
-    )
+    explicit ReturnTACKYASTNode(std::shared_ptr<ValueTACKYASTNode> value)
       : value{ value }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    [[nodiscard]] std::shared_ptr<ValueTACKYASTNode> getValue() const
+    {
+      return value;
+    }
+
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly() const final override;
+
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
     {
       Utility::indent(out, indent_level);
       out << "Return(";
-      value->prettyPrintHelper(out, indent_level);
+      getValue()->prettyPrintHelper(out, indent_level);
       out << ")\n";
     }
 
-    virtual ~ReturnTACKYASTNode() override = default;
+    virtual ~ReturnTACKYASTNode() final override = default;
   };
 
-  class UnaryTACKYASTNode: public InstructionTACKYASTNode
+  class UnaryOperatorAssemblyASTNode;
+  class UnaryOperatorTACKYASTNode: public TACKYASTNode
   {
-    UnaryOperator                         unary_operator{};
-    std::shared_ptr<ValueTACKYASTNode>    source{};
-    std::shared_ptr<VariableTACKYASTNode> destination{};
+    protected:
+    virtual void printUnaryOperator(std::ostream &) = 0;
 
     public:
-    constexpr UnaryTACKYASTNode(
-      UnaryOperator                         unary_operator,
-      std::shared_ptr<ValueTACKYASTNode>    source,
-      std::shared_ptr<VariableTACKYASTNode> destination
+    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
+    emitAssembly() const = 0;
+
+    constexpr virtual void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      printUnaryOperator(out);
+    }
+
+    virtual ~UnaryOperatorTACKYASTNode() override = default;
+  };
+
+  class ComplementAssemblyASTNode;
+  class ComplementTACKYASTNode final: public UnaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printUnaryOperator(std::ostream &out) final override
+    {
+      out << "Complement";
+    }
+
+    public:
+    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
+    emitAssembly() const final override;
+
+    virtual ~ComplementTACKYASTNode() final override = default;
+  };
+
+  class NegateAssemblyASTNode;
+  class NegateTACKYASTNode final: public UnaryOperatorTACKYASTNode
+  {
+    protected:
+    virtual constexpr void printUnaryOperator(std::ostream &out) final override
+    {
+      out << "Negate";
+    }
+
+    public:
+    [[nodiscard]] virtual std::shared_ptr<UnaryOperatorAssemblyASTNode>
+    emitAssembly() const final override;
+
+    virtual ~NegateTACKYASTNode() final override = default;
+  };
+
+  class UnaryTACKYASTNode final: public InstructionTACKYASTNode
+  {
+    std::shared_ptr<UnaryOperatorTACKYASTNode> unary_operator{};
+    std::shared_ptr<ValueTACKYASTNode>         source{};
+    std::shared_ptr<VariableTACKYASTNode>      destination{};
+
+    public:
+    UnaryTACKYASTNode(
+      std::shared_ptr<UnaryOperatorTACKYASTNode> unary_operator,
+      std::shared_ptr<ValueTACKYASTNode>         source,
+      std::shared_ptr<VariableTACKYASTNode>      destination
     )
       : unary_operator{ unary_operator }
       , source{ source }
       , destination{ destination }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    [[nodiscard]] virtual std::vector<
+      std::shared_ptr<InstructionAssemblyASTNode>>
+    emitAssembly() const final override;
+
+    [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
+    getUnaryOperator() const
+    {
+      return unary_operator;
+    }
+
+    [[nodiscard]] std::shared_ptr<ValueTACKYASTNode> getSource() const
+    {
+      return source;
+    }
+
+    [[nodiscard]] std::shared_ptr<VariableTACKYASTNode> getDestination() const
+    {
+      return destination;
+    }
+
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
     {
       Utility::indent(out, indent_level);
       out << "Unary(";
-      switch (unary_operator) {
-        case UnaryOperator::COMPLEMENT: out << "Complement"; break;
-        case UnaryOperator::NEGATE: out << "Negate"; break;
-        default: std::unreachable();
-      }
+      getUnaryOperator()->prettyPrintHelper(out, indent_level);
       out << ", ";
-      source->prettyPrintHelper(out, indent_level);
+      getSource()->prettyPrintHelper(out, indent_level);
       out << ", ";
-      destination->prettyPrintHelper(out, indent_level);
+      getDestination()->prettyPrintHelper(out, indent_level);
       out << ")\n";
     }
 
-    virtual ~UnaryTACKYASTNode() override = default;
+    virtual ~UnaryTACKYASTNode() final override = default;
   };
 
-  class FunctionTACKYASTNode: public TACKYASTNode
+  class FunctionAssemblyASTNode;
+  class FunctionTACKYASTNode final: public TACKYASTNode
   {
-    Identifier const                                      identifier{};
+    std::string const                                     identifier{};
     std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions{};
 
     public:
     constexpr FunctionTACKYASTNode(
-      Identifier                                            identifier,
+      std::string_view                                      identifier,
       std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions
     )
       : identifier{ identifier }
       , instructions{ std::move(instructions) }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    [[nodiscard]] constexpr std::string_view getIdentifier() const noexcept
     {
-      out << "Function: " << identifier.getName() << "\n";
-      for (auto &instruction: instructions) {
+      return identifier;
+    }
+
+    [[nodiscard]] constexpr std::span<
+      std::shared_ptr<InstructionTACKYASTNode> const>
+    getInstructions() const noexcept
+    {
+      return instructions;
+    }
+
+    [[nodiscard]] std::shared_ptr<FunctionAssemblyASTNode> emitAssembly() const;
+
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
+    {
+      out << "Function: " << getIdentifier() << "\n";
+      for (auto &instruction: getInstructions()) {
         instruction->prettyPrintHelper(out, indent_level + 2);
       }
     }
 
-    virtual ~FunctionTACKYASTNode() override = default;
+    virtual ~FunctionTACKYASTNode() final override = default;
   };
 
-  class ProgramTACKYASTNode: public TACKYASTNode
+  class ProgramAssemblyASTNode;
+  class ProgramTACKYASTNode final: public TACKYASTNode
   {
     std::shared_ptr<FunctionTACKYASTNode> function{};
 
     public:
-    explicit constexpr ProgramTACKYASTNode(
-      std::shared_ptr<FunctionTACKYASTNode> function
-    )
+    explicit ProgramTACKYASTNode(std::shared_ptr<FunctionTACKYASTNode> function)
       : function{ function }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    [[nodiscard]] std::shared_ptr<FunctionTACKYASTNode>
+    getFunction() const noexcept
     {
-      function->prettyPrintHelper(out, indent_level);
+      return function;
     }
 
-    virtual ~ProgramTACKYASTNode() override = default;
+    [[nodiscard]] std::shared_ptr<ProgramAssemblyASTNode> emitAssembly() const;
+
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
+    {
+      getFunction()->prettyPrintHelper(out, indent_level);
+    }
+
+    virtual ~ProgramTACKYASTNode() final override = default;
   };
 } // namespace SC2
 

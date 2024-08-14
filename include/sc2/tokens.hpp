@@ -2,204 +2,328 @@
 #define SC2_TOKENS_HPP_INCLUDED
 
 #include <sc2/compiler_error.hpp>
+#include <string_view>
 
 #include <format>
+#include <memory>
 #include <string>
 #include <utility>
 
 namespace SC2 {
-  class Identifier
+  struct BasicToken: public std::enable_shared_from_this<BasicToken>
+  {
+    [[nodiscard]] virtual constexpr bool operator==(BasicToken const &other
+    ) const noexcept
+    {
+      return typeid(*this) == typeid(other);
+    }
+
+    [[nodiscard]] virtual constexpr std::string toString() const = 0;
+
+    virtual ~BasicToken() = default;
+  };
+
+  class IdentifierToken final: public BasicToken
   {
     std::string name{};
 
     public:
-    constexpr Identifier() = default;
-    explicit constexpr Identifier(std::string_view const name): name{ name } {}
-    constexpr Identifier(Identifier const &) = default;
-    [[nodiscard]] constexpr auto operator<=>(Identifier const &) const
-      = default;
-    // References could be a problem
-    [[nodiscard]] constexpr std::string const &getName() const noexcept(false)
+    constexpr IdentifierToken() = default;
+
+    explicit constexpr IdentifierToken(std::string_view const name)
+      : name{ name }
+    {}
+
+    IdentifierToken(IdentifierToken const &) = default;
+
+    [[nodiscard]] virtual constexpr bool operator==(BasicToken const &other
+    ) const noexcept final override
+    {
+      return typeid(*this) == typeid(other) ?
+               static_cast<IdentifierToken const &>(other).operator==(*this) :
+               false;
+    }
+
+    [[nodiscard]] constexpr std::string_view getName() const noexcept
     {
       return name;
     }
+
+    [[nodiscard]] constexpr bool operator==(IdentifierToken const &other
+    ) const noexcept
+    {
+      return getName() == other.getName();
+    }
+
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return std::format("Identifier: {}", getName());
+    }
+
+    virtual ~IdentifierToken() final override = default;
   };
 
-  class LiteralConstant
+  class LiteralConstantToken final: public BasicToken
   {
     int value{};
 
     public:
-    constexpr LiteralConstant() = default;
-    explicit constexpr LiteralConstant(int const value): value{ value } {}
-    constexpr LiteralConstant(LiteralConstant const &)        = default;
-    constexpr auto operator<=>(LiteralConstant const &) const = default;
-    [[nodiscard]] constexpr int getValue() const noexcept(false)
+    constexpr LiteralConstantToken() = default;
+
+    explicit constexpr LiteralConstantToken(int const value): value{ value } {}
+
+    LiteralConstantToken(LiteralConstantToken const &) = default;
+
+    [[nodiscard]] virtual constexpr bool operator==(BasicToken const &other
+    ) const noexcept final override
     {
-      return value;
+      return typeid(*this) == typeid(other) ?
+               static_cast<LiteralConstantToken const &>(other).operator==(*this
+               ) :
+               false;
+    }
+
+    [[nodiscard]] constexpr int getValue() const noexcept { return value; }
+
+    [[nodiscard]] virtual constexpr bool
+    operator==(LiteralConstantToken const &other) const noexcept
+    {
+      return getValue() == other.getValue();
+    }
+
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return std::format("Literal constant: {}", value);
+    }
+
+    virtual ~LiteralConstantToken() final override = default;
+  };
+
+  class KeywordToken: public BasicToken
+  {
+    protected:
+    [[nodiscard]] virtual constexpr std::string getKeyword() const = 0;
+
+    public:
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return std::format("Keyword: {}", getKeyword());
     }
   };
 
-  enum class Keyword
+  class IntKeywordToken final: public KeywordToken
   {
-    INT,
-    RETURN,
-    VOID
+    protected:
+    [[nodiscard]] virtual constexpr std::string
+    getKeyword() const final override
+    {
+      return "int";
+    }
+
+    public:
+    virtual ~IntKeywordToken() final override = default;
   };
 
-  enum class Parenthesis
+  class ReturnKeywordToken final: public KeywordToken
   {
-    LEFT_PARENTHESIS,
-    RIGHT_PARENTHESIS
+    protected:
+    [[nodiscard]] virtual constexpr std::string
+    getKeyword() const final override
+    {
+      return "return";
+    }
+
+    public:
+    virtual ~ReturnKeywordToken() final override = default;
   };
 
-  enum class Brace
+  class VoidKeywordToken final: public KeywordToken
   {
-    LEFT_BRACE,
-    RIGHT_BRACE
+    protected:
+    [[nodiscard]] virtual constexpr std::string
+    getKeyword() const final override
+    {
+      return "void";
+    }
+
+    public:
+    virtual ~VoidKeywordToken() final override = default;
   };
 
-  inline constexpr struct SemicolonTag
+  struct ParenthesisToken: public BasicToken
   {
-    constexpr auto operator<=>(SemicolonTag const &) const = default;
-  } Semicolon{};
-
-  inline constexpr struct TildeTag
-  {
-    constexpr auto operator<=>(TildeTag const &) const = default;
-  } Tilde{};
-
-  inline constexpr struct HyphenTag
-  {
-    constexpr auto operator<=>(HyphenTag const &) const = default;
-  } Hyphen{};
-
-  inline constexpr struct DecrementTag
-  {
-    constexpr auto operator<=>(DecrementTag const &) const = default;
-  } Decrement{};
-
-  template <typename... Ts> struct Overloaded: Ts...
-  {
-    using Ts::operator()...;
+    virtual ~ParenthesisToken() override = default;
   };
 
-  template <typename... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
+  struct LeftParenthesisToken final: public ParenthesisToken
+  {
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return "left parenthesis";
+    }
+
+    virtual ~LeftParenthesisToken() final override = default;
+  };
+
+  struct RightParenthesisToken final: public ParenthesisToken
+  {
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return "right parenthesis";
+    }
+
+    virtual ~RightParenthesisToken() final override = default;
+  };
+
+  struct CurlyBraceToken: public BasicToken
+  {
+    virtual ~CurlyBraceToken() override = default;
+  };
+
+  struct LeftCurlyBraceToken final: public CurlyBraceToken
+  {
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return "left curly brace";
+    }
+
+    virtual ~LeftCurlyBraceToken() final override = default;
+  };
+
+  struct RightCurlyBraceToken final: public CurlyBraceToken
+  {
+    [[nodiscard]] virtual constexpr std::string toString() const final override
+    {
+      return "right curly brace";
+    }
+
+    virtual ~RightCurlyBraceToken() final override = default;
+  };
+
+  struct SemicolonToken: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "semicolon";
+    }
+    constexpr auto operator<=>(SemicolonToken const &) const = default;
+
+    virtual ~SemicolonToken() final override = default;
+  };
+
+  struct TildeToken: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "tilde";
+    }
+    constexpr auto operator<=>(TildeToken const &) const = default;
+
+    virtual ~TildeToken() final override = default;
+  };
+
+  struct HyphenToken: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "hyphen";
+    }
+    constexpr auto operator<=>(HyphenToken const &) const = default;
+
+    virtual ~HyphenToken() final override = default;
+  };
+
+  struct DecrementToken: public BasicToken
+  {
+    [[nodiscard]] virtual constexpr std::string
+    toString() const noexcept final override
+    {
+      return "decrement";
+    }
+    constexpr auto operator<=>(DecrementToken const &) const = default;
+
+    virtual ~DecrementToken() final override = default;
+  };
 
   class Token
   {
-    using type = std::variant<
-      SemicolonTag,
-      TildeTag,
-      HyphenTag,
-      DecrementTag,
-      Parenthesis,
-      Brace,
-      Identifier,
-      LiteralConstant,
-      Keyword>;
-    type token{};
+    std::shared_ptr<BasicToken> token{};
 
     public:
     constexpr Token() = default;
-    explicit constexpr Token(type const &token): token{ token } {}
-    constexpr Token(Token const &)                    = default;
-    constexpr auto   operator<=>(Token const &) const = default;
-    constexpr Token &operator=(Token const &)         = default;
 
-    // clang-format off
-    [[nodiscard]] constexpr std::string toString() const noexcept(false)
+    explicit Token(std::shared_ptr<BasicToken> token): token{ token } {}
+
+    Token(Token const &) = default;
+
+    [[nodiscard]] constexpr bool operator==(Token const &other) const noexcept
     {
-      using namespace std::literals::string_literals;
-      return std::visit(
-        Overloaded(
-          [](SemicolonTag) { return "semicolon"s; },
-          [](TildeTag) { return "tilde"s; },
-          [](HyphenTag) { return "hyphen"s; },
-          [](DecrementTag) { return "decrement"s; },
-          [](Identifier const &identifier) {
-            return std::format("Identifier: {}", identifier.getName());
-          },
-          [](LiteralConstant const &literalConstant) {
-            return std::format("Literal constant: {}", literalConstant.getValue());
-          },
-          [](Keyword keyword) {
-            return std::format("Keyword: {}", [keyword]() {
-              switch (keyword) {
-                case Keyword::INT: return "int"s; break;
-                case Keyword::RETURN: return "return"s; break;
-                case Keyword::VOID: return "void"s; break;
-                default: std::unreachable();
-              }
-            }());
-          },
-          [](Parenthesis parenthesis) {
-            switch (parenthesis) {
-              case Parenthesis::LEFT_PARENTHESIS:
-                return "left parenthesis"s;
-                break;
-              case Parenthesis::RIGHT_PARENTHESIS:
-                return "right parenthesis"s;
-                break;
-              default: std::unreachable();
-            }
-          },
-          [](Brace brace) {
-            switch (brace) {
-              case Brace::LEFT_BRACE: return "left curly brace"s; break;
-              case Brace::RIGHT_BRACE: return "right curly brace"s; break;
-              default: std::unreachable();
-            }
-          }
-        ),
-        token
+      return *token == *other.token;
+    }
+
+    Token &operator=(Token const &) = default;
+
+    [[nodiscard]] constexpr std::string toString() const
+    {
+      return token->toString();
+    }
+
+    [[nodiscard]] bool isLiteralConstant() const noexcept
+    {
+      return static_cast<bool>(
+        std::dynamic_pointer_cast<LiteralConstantToken>(token)
       );
-    } // clang-format on
-
-    [[nodiscard]] constexpr bool isLiteralConstant() const noexcept
-    {
-      return std::holds_alternative<LiteralConstant>(token);
     }
 
-    [[nodiscard]] constexpr bool isTilde() const noexcept
+    [[nodiscard]] bool isTilde() const noexcept
     {
-      return std::holds_alternative<TildeTag>(token);
+      return static_cast<bool>(std::dynamic_pointer_cast<TildeToken>(token));
     }
 
-    [[nodiscard]] constexpr bool isHyphen() const noexcept
+    [[nodiscard]] bool isHyphen() const noexcept
     {
-      return std::holds_alternative<HyphenTag>(token);
+      return static_cast<bool>(std::dynamic_pointer_cast<HyphenToken>(token));
     }
 
-    [[nodiscard]] constexpr bool isDecrement() const noexcept
+    [[nodiscard]] bool isDecrement() const noexcept
     {
-      return std::holds_alternative<DecrementTag>(token);
+      return static_cast<bool>(std::dynamic_pointer_cast<DecrementToken>(token)
+      );
     }
 
-    [[nodiscard]] constexpr bool isParenthesis() const noexcept
+    [[nodiscard]] bool isParenthesis() const noexcept
     {
-      return std::holds_alternative<Parenthesis>(token);
+      return static_cast<bool>(std::dynamic_pointer_cast<ParenthesisToken>(token
+      ));
     }
 
-    [[nodiscard]] Identifier      getIdentifier() const noexcept(false);
-    [[nodiscard]] LiteralConstant getLiteralConstant() const;
-    [[nodiscard]] Keyword         getKeyword() const noexcept(false);
-    [[nodiscard]] Parenthesis     getParenthesis() const noexcept(false);
-    [[nodiscard]] Brace           getBrace() const noexcept(false);
-    [[nodiscard]] SemicolonTag    getSemicolon() const noexcept(false);
-    [[nodiscard]] TildeTag        getTilde() const noexcept(false);
-    [[nodiscard]] HyphenTag       getHyphen() const noexcept(false);
-    [[nodiscard]] DecrementTag    getDecrement() const noexcept(false);
+    [[nodiscard]] std::shared_ptr<IdentifierToken> getIdentifier() const;
+    [[nodiscard]] std::shared_ptr<LiteralConstantToken>
+                                                   getLiteralConstant() const;
+    [[nodiscard]] std::shared_ptr<IntKeywordToken> getIntKeyword() const;
+    [[nodiscard]] std::shared_ptr<ReturnKeywordToken> getReturnKeyword() const;
+    [[nodiscard]] std::shared_ptr<VoidKeywordToken>   getVoidKeyword() const;
+    [[nodiscard]] std::shared_ptr<ParenthesisToken> getLeftParenthesis() const;
+    [[nodiscard]] std::shared_ptr<ParenthesisToken> getRightParenthesis() const;
+    [[nodiscard]] std::shared_ptr<CurlyBraceToken>  getLeftCurlyBrace() const;
+    [[nodiscard]] std::shared_ptr<CurlyBraceToken>  getRightCurlyBrace() const;
+    [[nodiscard]] std::shared_ptr<SemicolonToken>   getSemicolon() const;
+    [[nodiscard]] std::shared_ptr<TildeToken>       getTilde() const;
+    [[nodiscard]] std::shared_ptr<HyphenToken>      getHyphen() const;
+    [[nodiscard]] std::shared_ptr<DecrementToken>   getDecrement() const;
   };
 
-  class TokenConversionError: public CompilerError
+  class TokenConversionError final: public CompilerError
   {
     std::string const message{};
     Token const       source_token{};
     std::string const destination_token_type{};
 
     public:
-    constexpr TokenConversionError(
+    TokenConversionError(
       Token const           &source_token,
       std::string_view const destination_token_type
     )
@@ -211,16 +335,21 @@ namespace SC2 {
       , source_token{ source_token }
       , destination_token_type{ destination_token_type }
     {}
-    constexpr Token       getSourceToken() const { return source_token; }
-    constexpr std::string getDestinationTokenType() const
+
+    [[nodiscard]] Token getSourceToken() const noexcept { return source_token; }
+
+    [[nodiscard]] constexpr std::string_view
+    getDestinationTokenType() const noexcept
     {
       return destination_token_type;
     }
-    virtual constexpr char const *what() const noexcept
+
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
-    virtual ~TokenConversionError() override = default;
+
+    virtual ~TokenConversionError() final override = default;
   };
 } // namespace SC2
 

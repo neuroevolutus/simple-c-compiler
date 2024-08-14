@@ -18,13 +18,12 @@ namespace SC2 {
     virtual ~ParserError() = default;
   };
 
-  class ParserNonTerminalError: public ParserError
+  class ParserNonTerminalError final: public ParserError
   {
     std::string const message{};
 
     public:
-    // TODO: Make sure only single argument constructors are explicit
-    constexpr ParserNonTerminalError(
+    ParserNonTerminalError(
       std::string_view   non_terminal,
       ParserError const &childError
     )
@@ -35,20 +34,20 @@ namespace SC2 {
         ) }
     {}
 
-    virtual constexpr char const *what() const noexcept override
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
 
-    virtual ~ParserNonTerminalError() override = default;
+    virtual ~ParserNonTerminalError() final override = default;
   };
 
-  class ParserTokenCreationError: public ParserError
+  class ParserTokenCreationError final: public ParserError
   {
     std::string const message{};
 
     public:
-    constexpr ParserTokenCreationError(TokenConversionError const &error)
+    ParserTokenCreationError(TokenConversionError const &error)
       : message{ std::format(
           "Parser error: Cannot create ({}) from ({})",
           error.getDestinationTokenType(),
@@ -56,23 +55,20 @@ namespace SC2 {
         ) }
     {}
 
-    virtual constexpr char const *what() const noexcept override
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
 
-    virtual ~ParserTokenCreationError() override = default;
+    virtual ~ParserTokenCreationError() final override = default;
   };
 
-  class ParserTokenExpectationError: public ParserError
+  class ParserTokenExpectationError final: public ParserError
   {
     std::string const message{};
 
     public:
-    constexpr ParserTokenExpectationError(
-      Token expected_token,
-      Token actual_token
-    )
+    ParserTokenExpectationError(Token expected_token, Token actual_token)
       : message{ std::format(
           "Parser error: Expected ({}) but got ({})",
           expected_token.toString(),
@@ -80,69 +76,72 @@ namespace SC2 {
         ) }
     {}
 
-    virtual constexpr char const *what() const noexcept override
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
 
-    virtual ~ParserTokenExpectationError() override = default;
+    virtual ~ParserTokenExpectationError() final override = default;
   };
 
-  struct ParserUnmatchedParenthesesError: public ParserError
+  struct ParserUnmatchedParenthesesError final: public ParserError
   {
-    virtual constexpr char const *what() const noexcept override
+    virtual constexpr char const *what() const noexcept final override
     {
       return "Parser error: unmatched parentheses";
     }
 
-    virtual ~ParserUnmatchedParenthesesError() = default;
+    virtual ~ParserUnmatchedParenthesesError() final override = default;
   };
 
-  struct ParserEOFError: public ParserError
+  struct ParserEOFError final: public ParserError
   {
     static constexpr char const * const message{
       "Parser error: reached end of file"
     };
 
-    virtual constexpr char const *what() const noexcept { return message; }
+    virtual constexpr char const *what() const noexcept final override
+    {
+      return message;
+    }
 
-    virtual ~ParserEOFError() override = default;
+    virtual ~ParserEOFError() final override = default;
   };
 
-  struct ParserExtraneousTokenError: public ParserError
+  struct ParserExtraneousTokenError final: public ParserError
   {
     std::string const message{};
 
     public:
-    constexpr ParserExtraneousTokenError(Token token)
+    ParserExtraneousTokenError(Token token)
       : message{
         std::format("Parser error: Extraneous token: ({})", token.toString())
       }
     {}
 
-    virtual constexpr char const *what() const noexcept
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
 
-    virtual ~ParserExtraneousTokenError() override = default;
+    virtual ~ParserExtraneousTokenError() final override = default;
   };
 
-  class ParserInvalidTokenError: public ParserError
+  class ParserInvalidTokenError final: public ParserError
   {
     std::string const message{};
 
     public:
-    constexpr ParserInvalidTokenError(LexerInvalidTokenError const &error)
+    ParserInvalidTokenError(LexerInvalidTokenError const &error)
       : message{ std::format("{}", error.what()) }
     {}
 
-    virtual constexpr char const *what() const noexcept
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
 
-    virtual ~ParserInvalidTokenError() = default;
+    virtual ~ParserInvalidTokenError() final override = default;
   };
 
   class Parser
@@ -151,7 +150,7 @@ namespace SC2 {
     std::vector<Token> tokens{};
     Lexer             &lexer;
 
-    [[nodiscard]] constexpr Token peekNextToken() noexcept(false)
+    [[nodiscard]] Token peekNextToken()
     try {
       return *lexer;
     } catch (LexerEOFError const &) {
@@ -161,7 +160,7 @@ namespace SC2 {
     // We have to do some gymnastics here so that we don't get confusing error
     // messages. We want a non-terminal to parse correctly even if the *next*
     // token following the non-terminal is invalid.
-    [[nodiscard]] constexpr Token parseNextToken() noexcept(false)
+    [[nodiscard]] Token parseNextToken()
     try {
       if (current_exception) {
         try {
@@ -182,39 +181,52 @@ namespace SC2 {
       throw ParserEOFError{};
     }
 
-    constexpr Identifier parseIdentifier() noexcept(false)
+    [[nodiscard]] std::shared_ptr<IdentifierToken> parseIdentifierToken()
     try {
       return parseNextToken().getIdentifier();
     } catch (TokenConversionError const &error) {
       throw ParserTokenCreationError(error);
     }
 
-    constexpr LiteralConstant parseLiteralConstant() noexcept(false)
+    [[nodiscard]] std::shared_ptr<LiteralConstantToken>
+    parseLiteralConstantToken()
     try {
       return parseNextToken().getLiteralConstant();
     } catch (TokenConversionError const &error) {
       throw ParserTokenCreationError(error);
     }
 
-    constexpr void expect(Token const &expected_token) noexcept(false)
+    void expect(Token const &expected_token)
     {
       if (auto const actual_token{ parseNextToken() };
           expected_token != actual_token)
         throw ParserTokenExpectationError(expected_token, actual_token);
     }
 
-    constexpr void expectFinished() noexcept(false)
+    constexpr void expectFinished()
     {
       if (lexer != lexer.end()) throw ParserExtraneousTokenError(*lexer);
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<UnaryExpressionASTNode>
-    parseUnaryExpression() noexcept(false)
+    [[nodiscard]] std::shared_ptr<LiteralConstantASTNode>
+    parseLiteralConstantExpression()
     {
-      Token                              next_token{ parseNextToken() };
-      UnaryOperator                      unary_operator{ next_token.isTilde() ?
-                                                           UnaryOperator::COMPLEMENT :
-                                                           UnaryOperator::NEGATE };
+      return std::make_shared<LiteralConstantASTNode>(
+        parseLiteralConstantToken()->getValue()
+      );
+    }
+
+    [[nodiscard]] std::shared_ptr<UnaryExpressionASTNode> parseUnaryExpression()
+    {
+      Token                                 next_token{ parseNextToken() };
+      std::shared_ptr<UnaryOperatorASTNode> unary_operator{
+        [&]() -> std::shared_ptr<UnaryOperatorASTNode> {
+        if (next_token.isTilde())
+          return std::make_shared<ComplementASTNode>();
+        else
+          return std::make_shared<NegateASTNode>();
+      }()
+      };
       std::shared_ptr<ExpressionASTNode> expression{ parseExpression() };
       return std::make_shared<UnaryExpressionASTNode>(
         unary_operator,
@@ -222,20 +234,18 @@ namespace SC2 {
       );
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<ExpressionASTNode>
-    parseExpression() noexcept(false)
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode> parseExpression()
     try {
       Token nextToken{ peekNextToken() };
       if (nextToken.isLiteralConstant()) {
-        LiteralConstant const literalConstant{ parseLiteralConstant() };
-        return std::make_shared<LiteralConstantASTNode>(literalConstant);
+        return parseLiteralConstantExpression();
       } else if (nextToken.isTilde() || nextToken.isHyphen()) {
         return parseUnaryExpression();
       } else {
-        expect(Token(Parenthesis::LEFT_PARENTHESIS));
+        expect(Token(std::make_shared<LeftParenthesisToken>()));
         std::shared_ptr<ExpressionASTNode> expression{ parseExpression() };
         try {
-          expect(Token(Parenthesis::RIGHT_PARENTHESIS));
+          expect(Token(std::make_shared<RightParenthesisToken>()));
         } catch (...) {
           throw ParserUnmatchedParenthesesError{};
         }
@@ -245,38 +255,38 @@ namespace SC2 {
       throw ParserNonTerminalError("expression", error);
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<StatementASTNode>
-    parseStatement() noexcept(false)
+    [[nodiscard]] std::shared_ptr<StatementASTNode> parseStatement()
     try {
-      expect(Token(Keyword::RETURN));
+      expect(Token(std::make_shared<ReturnKeywordToken>()));
       auto const &expression{ parseExpression() };
-      expect(Token(Semicolon));
+      expect(Token(std::make_shared<SemicolonToken>()));
       return std::make_shared<StatementASTNode>(expression);
     } catch (ParserError const &error) {
       throw ParserNonTerminalError("statement", error);
     }
 
-    [[nodiscard]] constexpr std::shared_ptr<FunctionASTNode>
-    parseFunction() noexcept(false)
+    [[nodiscard]] std::shared_ptr<FunctionASTNode> parseFunction()
     try {
-      expect(Token(Keyword::INT));
-      Identifier const function_name{ parseIdentifier() };
-      expect(Token(Parenthesis::LEFT_PARENTHESIS));
-      expect(Token(Keyword::VOID));
-      expect(Token(Parenthesis::RIGHT_PARENTHESIS));
-      expect(Token(Brace::LEFT_BRACE));
+      expect(Token(std::make_shared<IntKeywordToken>()));
+      std::shared_ptr<IdentifierToken> function_name{ parseIdentifierToken() };
+      expect(Token(std::make_shared<LeftParenthesisToken>()));
+      expect(Token(std::make_shared<VoidKeywordToken>()));
+      expect(Token(std::make_shared<RightParenthesisToken>()));
+      expect(Token(std::make_shared<LeftCurlyBraceToken>()));
       auto const &statement{ parseStatement() };
-      expect(Token(Brace::RIGHT_BRACE));
-      return std::make_shared<FunctionASTNode>(function_name, statement);
+      expect(Token(std::make_shared<RightCurlyBraceToken>()));
+      return std::make_shared<FunctionASTNode>(
+        function_name->getName(),
+        statement
+      );
     } catch (ParserError const &error) {
       throw ParserNonTerminalError("function", error);
     }
 
     public:
-    constexpr Parser(Lexer &lexer): lexer{ lexer } {}
+    Parser(Lexer &lexer): lexer{ lexer } {}
 
-    [[nodiscard]] constexpr std::shared_ptr<ProgramASTNode>
-    parseProgram() noexcept(false)
+    [[nodiscard]] std::shared_ptr<ProgramASTNode> parseProgram()
     try {
       auto const program{ std::make_shared<ProgramASTNode>(parseFunction()) };
       expectFinished();

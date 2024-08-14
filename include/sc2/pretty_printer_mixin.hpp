@@ -13,7 +13,8 @@ namespace SC2 {
       std::size_t   indent_level
     ) noexcept(false)
       = 0;
-    [[nodiscard]] constexpr std::string prettyPrint()
+
+    [[nodiscard]] std::string prettyPrint()
     {
       std::ostringstream out{};
       prettyPrintHelper(out, 0);

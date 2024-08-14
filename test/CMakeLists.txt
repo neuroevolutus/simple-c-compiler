@@ -22,18 +22,6 @@ target_link_libraries(parser_tests PRIVATE Catch2::Catch2WithMain)
 
 catch_discover_tests(parser_tests)
 
-add_executable(code_generator_tests code_generator_tests.cpp)
-target_include_directories(code_generator_tests
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:${CMAKE_BINARY_DIR}/include>
-)
-
-target_link_libraries(code_generator_tests PRIVATE compiler)
-target_link_libraries(code_generator_tests PRIVATE Catch2::Catch2WithMain)
-
-catch_discover_tests(code_generator_tests)
-
 add_executable(tacky_tests tacky_tests.cpp)
 target_include_directories(tacky_tests
   PUBLIC
@@ -45,3 +33,15 @@ target_link_libraries(tacky_tests PRIVATE compiler)
 target_link_libraries(tacky_tests PRIVATE Catch2::Catch2WithMain)
 
 catch_discover_tests(tacky_tests)
+
+add_executable(assembly_tests assembly_tests.cpp)
+target_include_directories(assembly_tests
+  PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_BINARY_DIR}/include>
+)
+
+target_link_libraries(assembly_tests PRIVATE compiler)
+target_link_libraries(assembly_tests PRIVATE Catch2::Catch2WithMain)
+
+catch_discover_tests(assembly_tests)

@@ -2,12 +2,13 @@
 #define SC2_AST_HPP_INCLUDED
 
 #include <sc2/pretty_printer_mixin.hpp>
-#include <sc2/tokens.hpp>
 #include <sc2/utility.hpp>
+#include <string_view>
 
 #include <cstddef>
 #include <memory>
 #include <ostream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -19,186 +20,238 @@ namespace SC2 {
     virtual ~ASTNode() = default;
   };
 
-  enum class UnaryOperator
-  {
-    COMPLEMENT,
-    NEGATE
-  };
-
   class InstructionTACKYASTNode;
   class ValueTACKYASTNode;
   struct ExpressionASTNode: public ASTNode
   {
-    virtual std::pair<
+    [[nodiscard]] virtual std::pair<
       std::shared_ptr<ValueTACKYASTNode>,
       std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-      emitTACKY(Identifier, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
+      emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
         const
       = 0;
 
     virtual ~ExpressionASTNode() override = default;
   };
 
-  class UnaryExpressionASTNode: public ExpressionASTNode
+  class UnaryOperatorTACKYASTNode;
+  class UnaryOperatorASTNode: public ASTNode
   {
-    UnaryOperator const                unary_operator{};
-    std::shared_ptr<ExpressionASTNode> expression{};
+    protected:
+    virtual void printUnaryOperator(std::ostream &out) = 0;
 
     public:
-    constexpr UnaryExpressionASTNode(
-      UnaryOperator                      unary_operator,
-      std::shared_ptr<ExpressionASTNode> expression
+    virtual std::shared_ptr<UnaryOperatorTACKYASTNode> emitTACKY() const = 0;
+
+    constexpr virtual void
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
+    {
+      printUnaryOperator(out);
+    }
+
+    virtual ~UnaryOperatorASTNode() override = default;
+  };
+
+  class ComplementASTNode final: public UnaryOperatorASTNode
+  {
+    protected:
+    virtual constexpr void printUnaryOperator(std::ostream &out) final override
+    {
+      out << "~";
+    }
+
+    public:
+    virtual std::shared_ptr<UnaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~ComplementASTNode() final override = default;
+  };
+
+  struct NegateASTNode final: public UnaryOperatorASTNode
+  {
+    protected:
+    virtual constexpr void printUnaryOperator(std::ostream &out) final override
+    {
+      out << "-";
+    }
+
+    public:
+    virtual std::shared_ptr<UnaryOperatorTACKYASTNode>
+    emitTACKY() const final override;
+
+    virtual ~NegateASTNode() final override = default;
+  };
+
+  class UnaryExpressionASTNode final: public ExpressionASTNode
+  {
+    std::shared_ptr<UnaryOperatorASTNode> const unary_operator{};
+    std::shared_ptr<ExpressionASTNode>          expression{};
+
+    public:
+    UnaryExpressionASTNode(
+      std::shared_ptr<UnaryOperatorASTNode> unary_operator,
+      std::shared_ptr<ExpressionASTNode>    expression
     )
       : unary_operator{ unary_operator }
       , expression{ expression }
     {}
 
-    constexpr UnaryOperator getUnaryOperator() const { return unary_operator; }
+    [[nodiscard]] std::shared_ptr<UnaryOperatorASTNode>
+    getUnaryOperator() const noexcept
+    {
+      return unary_operator;
+    }
 
-    constexpr std::shared_ptr<ExpressionASTNode> getExpression() const
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode>
+    getExpression() const noexcept
     {
       return expression;
     }
 
-    std::pair<
+    [[nodiscard]] std::pair<
       std::shared_ptr<ValueTACKYASTNode>,
       std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-      emitTACKY(Identifier, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
-        const override;
+      emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
+        const final override;
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
     {
-      switch (unary_operator) {
-        case UnaryOperator::COMPLEMENT: out << '~'; break;
-        case UnaryOperator::NEGATE: out << '-'; break;
-        default: std::unreachable();
-      }
+      getUnaryOperator()->prettyPrintHelper(out, indent_level);
       out << '(';
-      expression->prettyPrintHelper(out, indent_level);
+      getExpression()->prettyPrintHelper(out, indent_level);
       out << ')';
     }
 
-    virtual ~UnaryExpressionASTNode() override = default;
+    virtual ~UnaryExpressionASTNode() final override = default;
   };
 
   class LiteralConstantASTNode: public ExpressionASTNode
   {
-    LiteralConstant const value{};
+    int const value{};
 
     public:
-    explicit constexpr LiteralConstantASTNode(LiteralConstant const value)
-      : value{ value }
-    {}
+    explicit constexpr LiteralConstantASTNode(int value): value{ value } {}
+
+    [[nodiscard]] constexpr int getValue() const noexcept { return value; }
 
     virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    prettyPrintHelper(std::ostream &out, std::size_t) final override
     {
-      out << value.getValue();
+      out << getValue();
     }
 
-    LiteralConstant getLiteralConstant() const { return value; }
-
-    std::pair<
+    [[nodiscard]] virtual std::pair<
       std::shared_ptr<ValueTACKYASTNode>,
       std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
-      emitTACKY(Identifier, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
-        const override;
+      emitTACKY(std::string_view, std::vector<std::shared_ptr<InstructionTACKYASTNode>>)
+        const final override;
 
-    virtual ~LiteralConstantASTNode() override = default;
+    virtual ~LiteralConstantASTNode() final override = default;
   };
 
-  class StatementASTNode: public ASTNode
+  class StatementASTNode final: public ASTNode
   {
     std::shared_ptr<ExpressionASTNode> expression{};
 
     public:
-    explicit constexpr StatementASTNode(
-      std::shared_ptr<ExpressionASTNode> expression
-    )
+    explicit StatementASTNode(std::shared_ptr<ExpressionASTNode> expression)
       : expression{ expression }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
-    {
-      Utility::indent(out, indent_level);
-      out << "return ";
-      expression->prettyPrintHelper(out, indent_level);
-      out << ";\n";
-    }
-
-    std::shared_ptr<ExpressionASTNode> getExpression() const
+    [[nodiscard]] std::shared_ptr<ExpressionASTNode>
+    getExpression() const noexcept
     {
       return expression;
     }
 
-    std::vector<std::shared_ptr<InstructionTACKYASTNode>> emitTACKY(Identifier
-    ) const;
+    [[nodiscard]] std::vector<std::shared_ptr<InstructionTACKYASTNode>>
+      emitTACKY(std::string_view) const;
 
-    virtual ~StatementASTNode() override = default;
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
+    {
+      Utility::indent(out, indent_level);
+      out << "return ";
+      getExpression()->prettyPrintHelper(out, indent_level);
+      out << ";\n";
+    }
+
+    virtual ~StatementASTNode() final override = default;
   };
 
   class FunctionTACKYASTNode;
-  class FunctionASTNode: public ASTNode
+  class FunctionASTNode final: public ASTNode
   {
-    Identifier const                  function_name{};
+    std::string const                 identifier{};
     std::shared_ptr<StatementASTNode> statement{};
 
     public:
-    explicit constexpr FunctionASTNode(
-      Identifier const                  function_name,
+    FunctionASTNode(
+      std::string_view const            identifier,
       std::shared_ptr<StatementASTNode> statement
     )
-      : function_name{ function_name }
+      : identifier{ identifier }
       , statement{ statement }
     {}
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    [[nodiscard]] constexpr std::string_view getIdentifier() const noexcept
     {
-      Utility::indent(out, indent_level);
-      out << "int " << function_name.getName() << "(void) {\n";
-      statement->prettyPrintHelper(out, indent_level + 2);
-      out << "}\n";
+      return identifier;
     }
 
-    constexpr Identifier getIdentifier() const { return function_name; }
-
-    std::shared_ptr<FunctionTACKYASTNode> emitTACKY() const;
-
-    constexpr std::shared_ptr<StatementASTNode> getStatement() const
+    [[nodiscard]] std::shared_ptr<StatementASTNode>
+    getStatement() const noexcept
     {
       return statement;
     }
 
-    virtual ~FunctionASTNode() override = default;
+    [[nodiscard]] std::shared_ptr<FunctionTACKYASTNode> emitTACKY() const;
+
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
+    {
+      Utility::indent(out, indent_level);
+      out << "int " << getIdentifier() << "(void) {\n";
+      getStatement()->prettyPrintHelper(out, indent_level + 2);
+      out << "}\n";
+    }
+
+    virtual ~FunctionASTNode() final override = default;
   };
 
   class ProgramTACKYASTNode;
-  class ProgramASTNode: public ASTNode
+  class ProgramASTNode final: public ASTNode
   {
     std::shared_ptr<FunctionASTNode> function{};
 
     public:
-    explicit constexpr ProgramASTNode(std::shared_ptr<FunctionASTNode> function)
+    explicit ProgramASTNode(std::shared_ptr<FunctionASTNode> function)
       : function{ function }
     {}
 
-    constexpr std::shared_ptr<FunctionASTNode> getFunction() const
+    [[nodiscard]] std::shared_ptr<FunctionASTNode> getFunction() const
     {
       return function;
     }
 
-    std::shared_ptr<ProgramTACKYASTNode> emitTACKY() const;
+    [[nodiscard]] std::shared_ptr<ProgramTACKYASTNode> emitTACKY() const;
 
-    virtual constexpr void
-    prettyPrintHelper(std::ostream &out, std::size_t indent_level) override
+    virtual constexpr void prettyPrintHelper(
+      std::ostream &out,
+      std::size_t   indent_level
+    ) final override
     {
-      function->prettyPrintHelper(out, indent_level);
+      getFunction()->prettyPrintHelper(out, indent_level);
     }
 
-    virtual ~ProgramASTNode() override = default;
+    virtual ~ProgramASTNode() final override = default;
   };
 } // namespace SC2
 

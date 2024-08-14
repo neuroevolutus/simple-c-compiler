@@ -1,7 +1,7 @@
 #ifndef SC2_UTILITY_HPP_INCLUDED
 #define SC2_UTILITY_HPP_INCLUDED
 
-#include <sc2/tokens.hpp>
+#include <string_view>
 
 #include <cstddef>
 #include <format>
@@ -25,7 +25,7 @@ namespace SC2 {
 #endif
     }
 
-    static constexpr std::string
+    [[nodiscard]] static constexpr std::string
     specialiseFunctionNameForOS(std::string_view name)
     {
       return
@@ -37,10 +37,11 @@ namespace SC2 {
       ;
     }
 
-    static Identifier generateFreshIdentifier(Identifier identifier)
+    [[nodiscard]] static std::string
+    generateFreshIdentifier(std::string_view identifier)
     {
       static std::size_t counter{};
-      return Identifier(std::format("{}.{}", identifier.getName(), counter++));
+      return std::format("{}.{}", identifier, counter++);
     }
   };
 } // namespace SC2

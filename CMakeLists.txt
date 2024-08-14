@@ -10,6 +10,13 @@ set(CMAKE_EXE_LINKER_FLAGS_INIT "-fsanitize=address -fsanitize=undefined")
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-fsanitize=address -fsanitize=undefined")
 set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fsanitize=address -fsanitize=undefined")
 
+#[[
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+find_program(CLANG_TIDY_EXECUTABLE clang-tidy REQUIRED)
+set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR})
+set(CMAKE_C_CLANG_TIDY ${CLANG_TIDY_EXECUTABLE} -p ${CMAKE_BINARY_DIR})
+]]
+
 Include(FetchContent)
 
 FetchContent_Declare(
@@ -24,7 +31,7 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 
-add_library(compiler src/ast.cpp src/tokens.cpp)
+add_library(compiler src/ast.cpp src/lexer.cpp src/tacky_ast.cpp src/tokens.cpp)
 target_include_directories(compiler
   PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

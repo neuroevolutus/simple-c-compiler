@@ -10,9 +10,9 @@
 #include <charconv>
 #include <cstddef>
 #include <exception>
-#include <generator>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <regex>
 #include <stdexcept>
 #include <utility>
@@ -24,32 +24,32 @@ namespace SC2 {
     virtual ~LexerError() = default;
   };
 
-  class LexerInvalidTokenError: public LexerError
+  class LexerInvalidTokenError final: public LexerError
   {
     std::string const message{};
 
     public:
-    explicit constexpr LexerInvalidTokenError(
-      std::string_view const invalid_program_text
-    )
+    explicit LexerInvalidTokenError(std::string_view const invalid_program_text)
       : message{
         std::format("Lexer error: Invalid token: {}", invalid_program_text)
       }
     {}
-    virtual constexpr char const *what() const noexcept override
+
+    virtual constexpr char const *what() const noexcept final override
     {
       return message.c_str();
     }
-    virtual ~LexerInvalidTokenError() override = default;
+
+    virtual ~LexerInvalidTokenError() final override = default;
   };
 
-  struct LexerEOFError: public LexerError
+  struct LexerEOFError final: public LexerError
   {
-    virtual constexpr char const *what() const noexcept override
+    virtual constexpr char const *what() const noexcept final override
     {
       return "Lexer error: reached end of file";
     }
-    virtual ~LexerEOFError() override = default;
+    virtual ~LexerEOFError() final override = default;
   };
 
   class Lexer
@@ -86,25 +86,25 @@ namespace SC2 {
       operator++();
     }
 
-    constexpr Lexer(Lexer const &) = default;
+    Lexer(Lexer const &) = default;
 
     [[nodiscard]] constexpr Lexer &begin() noexcept(noexcept(operator++()))
     {
       return *this;
     }
 
-    [[nodiscard]] constexpr std::default_sentinel_t end() noexcept(false)
+    [[nodiscard]] constexpr std::default_sentinel_t end()
     {
       return std::default_sentinel;
     }
 
-    [[nodiscard]] constexpr Token operator*() noexcept(false)
+    [[nodiscard]] Token operator*()
     {
       if (finished) throw LexerEOFError{};
       return current_token;
     }
 
-    [[nodiscard]] constexpr Token *operator->() noexcept(false)
+    [[nodiscard]] constexpr Token *operator->()
     {
       if (finished) throw LexerEOFError{};
       return &current_token;
@@ -116,14 +116,14 @@ namespace SC2 {
       return finished;
     }
 
-    constexpr Lexer operator++(int) noexcept(noexcept(operator++()))
+    Lexer operator++(int) noexcept(noexcept(operator++()))
     {
       auto const result{ *this };
       operator++();
       return result;
     }
 
-    constexpr Lexer &operator++() noexcept(false)
+    constexpr Lexer &operator++()
     {
       if (finished) throw LexerEOFError{};
       clearWhitespaceFromStartOfProgramText();
@@ -205,13 +205,14 @@ namespace SC2 {
         else if (identifier_regex_match.length() == largest_match_size) {
           if (auto const &identifier{ identifier_regex_match.str() };
               identifier == "int") {
-            current_token = Token(Keyword::INT);
+            current_token = Token(std::make_shared<IntKeywordToken>());
           } else if (identifier == "return") {
-            current_token = Token(Keyword::RETURN);
+            current_token = Token(std::make_shared<ReturnKeywordToken>());
           } else if (identifier == "void") {
-            current_token = Token(Keyword::VOID);
+            current_token = Token(std::make_shared<VoidKeywordToken>());
           } else
-            current_token = Token(Identifier(identifier));
+            current_token
+              = Token(std::make_shared<IdentifierToken>(identifier));
         } else if (literal_constant_regex_match.length()
                    == largest_match_size) {
           auto const &literal_constant_string{ literal_constant_regex_match.str(
@@ -234,31 +235,32 @@ namespace SC2 {
             else
               std::unreachable();
           }
-          current_token = Token(LiteralConstant(literal_constant));
+          current_token
+            = Token(std::make_shared<LiteralConstantToken>(literal_constant));
         } else if (parenthesis_regex_match.length() == largest_match_size) {
           auto const &parenthesis{ parenthesis_regex_match.str() };
           if (parenthesis == "(")
-            current_token = Token(Parenthesis::LEFT_PARENTHESIS);
+            current_token = Token(std::make_shared<LeftParenthesisToken>());
           else if (parenthesis == ")")
-            current_token = Token(Parenthesis::RIGHT_PARENTHESIS);
+            current_token = Token(std::make_shared<RightParenthesisToken>());
           else
             std::unreachable();
         } else if (brace_regex_match.length() == largest_match_size) {
           auto const &brace{ brace_regex_match.str() };
           if (brace == "{")
-            current_token = Token(Brace::LEFT_BRACE);
+            current_token = Token(std::make_shared<LeftCurlyBraceToken>());
           else if (brace == "}")
-            current_token = Token(Brace::RIGHT_BRACE);
+            current_token = Token(std::make_shared<RightCurlyBraceToken>());
           else
             std::unreachable();
         } else if (semicolon_regex_match.length() == largest_match_size) {
-          current_token = Token(Semicolon);
+          current_token = Token(std::make_shared<SemicolonToken>());
         } else if (tilde_regex_match.length() == largest_match_size) {
-          current_token = Token(Tilde);
+          current_token = Token(std::make_shared<TildeToken>());
         } else if (hyphen_regex_match.length() == largest_match_size) {
-          current_token = Token(Hyphen);
+          current_token = Token(std::make_shared<HyphenToken>());
         } else if (decrement_regex_match.length() == largest_match_size) {
-          current_token = Token(Decrement);
+          current_token = Token(std::make_shared<DecrementToken>());
         } else
           std::unreachable();
         program_text.erase(0, largest_match_size);
@@ -267,46 +269,6 @@ namespace SC2 {
       return *this;
     }
   };
-
-  std::regex Lexer::whitespace_prefix_regex(
-    "^(\\s+)",
-    std::regex::ECMAScript | std::regex::optimize
-  );
-
-  std::regex Lexer::identifier_regex(
-    "^[a-zA-Z_]\\w*\\b",
-    std::regex::ECMAScript | std::regex::optimize
-  );
-
-  std::regex Lexer::literal_constant_regex(
-    "^[0-9]+\\b",
-    std::regex::ECMAScript | std::regex::optimize
-  );
-
-  std::regex Lexer::parenthesis_regex(
-    "^(\\(|\\))",
-    std::regex::ECMAScript | std::regex::optimize
-  );
-
-  std::regex Lexer::brace_regex(
-    "^(\\{|\\})",
-    std::regex::ECMAScript | std::regex::optimize
-  );
-
-  std::regex
-    Lexer::semicolon_regex("^;", std::regex::ECMAScript | std::regex::optimize);
-
-  std::regex
-    Lexer::tilde_regex("^~", std::regex::ECMAScript | std::regex::optimize);
-
-  std::regex
-    Lexer::hyphen_regex("^-", std::regex::ECMAScript | std::regex::optimize);
-
-  std::regex Lexer::decrement_regex(
-    "^--",
-    std::regex::ECMAScript | std::regex::optimize
-  );
-
 } // namespace SC2
 
 #endif

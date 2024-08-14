@@ -1,24 +1,35 @@
 #include <sc2/ast.hpp>
 #include <sc2/tacky_ast.hpp>
+#include <string_view>
 
 #include <memory>
 #include <utility>
 #include <vector>
 
 namespace SC2 {
+  std::shared_ptr<UnaryOperatorTACKYASTNode>
+  ComplementASTNode::emitTACKY() const
+  {
+    return std::make_shared<ComplementTACKYASTNode>();
+  }
+
+  std::shared_ptr<UnaryOperatorTACKYASTNode> NegateASTNode::emitTACKY() const
+  {
+    return std::make_shared<NegateTACKYASTNode>();
+  }
 
   std::pair<
     std::shared_ptr<ValueTACKYASTNode>,
     std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
   LiteralConstantASTNode::emitTACKY(
-    Identifier,
+    std::string_view,
     std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions
   ) const
   {
     return std::make_pair<
       std::shared_ptr<ValueTACKYASTNode>,
       std::vector<std::shared_ptr<InstructionTACKYASTNode>>>(
-      std::make_shared<LiteralConstantTACKYASTNode>(getLiteralConstant()),
+      std::make_shared<LiteralConstantTACKYASTNode>(getValue()),
       std::move(instructions)
     );
   }
@@ -27,7 +38,7 @@ namespace SC2 {
     std::shared_ptr<ValueTACKYASTNode>,
     std::vector<std::shared_ptr<InstructionTACKYASTNode>>>
   UnaryExpressionASTNode::emitTACKY(
-    Identifier                                            identifier,
+    std::string_view                                      identifier,
     std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions
   ) const
   {
@@ -38,7 +49,7 @@ namespace SC2 {
       Utility::generateFreshIdentifier(identifier)
     ) };
     new_instructions.push_back(std::make_shared<UnaryTACKYASTNode>(
-      getUnaryOperator(),
+      getUnaryOperator()->emitTACKY(),
       source,
       destination
     ));
@@ -51,7 +62,7 @@ namespace SC2 {
   }
 
   std::vector<std::shared_ptr<InstructionTACKYASTNode>>
-  StatementASTNode::emitTACKY(Identifier identifier) const
+  StatementASTNode::emitTACKY(std::string_view identifier) const
   {
     auto [value, instructions]{ getExpression()->emitTACKY(
       identifier,

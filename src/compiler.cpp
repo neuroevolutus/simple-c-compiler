@@ -1,9 +1,9 @@
 #include <sc2/assembly_ast.hpp>
-#include <sc2/assembly_generator.hpp>
 #include <sc2/ast.hpp>
 #include <sc2/compiler_error.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
+#include <sc2/tacky_ast.hpp>
 
 #include <cstdlib>
 #include <format>
@@ -62,7 +62,7 @@ int main(int argc, char const * const * const argv)
     program_buffer << file_stream.rdbuf();
     std::string const program_text{ program_buffer.str() };
     SC2::Lexer        dummy_lexer{ program_text };
-    for (auto const &token: dummy_lexer);
+    for (auto const &token: dummy_lexer); // NOLINT
     if (option && *option == "--lex") return EXIT_SUCCESS;
     SC2::Lexer  lexer{ program_text };
     SC2::Parser parser{ lexer };
@@ -70,11 +70,15 @@ int main(int argc, char const * const * const argv)
     if (option && *option == "--parse") return EXIT_SUCCESS;
     auto const tacky{ program->emitTACKY() };
     if (option && *option == "--tacky") return EXIT_SUCCESS;
-    auto const assembly{ SC2::AssemblyGenerator::generateProgramAssembly(program
+    auto const assembly{ tacky->emitAssembly() };
+    auto const [last_offset, _, cleaned_assembly]{
+      assembly->replacePseudoRegisters()
+    };
+    auto const fixed_assembly{ cleaned_assembly->fixUpInstructions(-last_offset
     ) };
     if (option && *option == "--codegen") return EXIT_SUCCESS;
     auto output_file_stream{ std::ofstream(file_basename + ".s") };
-    assembly->emitCode(output_file_stream);
+    fixed_assembly->emitCode(output_file_stream);
   } catch (SC2::CompilerError const &exception) {
     std::cerr << "Compiler error:\n" << exception.what();
     std::exit(EXIT_FAILURE);
