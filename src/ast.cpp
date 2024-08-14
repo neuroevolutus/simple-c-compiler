@@ -4,11 +4,24 @@
 
 #include <format>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace SC2 {
+  [[nodiscard]] bool TypeASTNode::operator==(TypeASTNode const &other) const
+  {
+    if (dynamic_cast<IntTypeASTNode const *>(this)
+        && dynamic_cast<IntTypeASTNode const *>(&other)) {
+      return true;
+    } else if (dynamic_cast<VoidTypeASTNode const *>(this)
+               && dynamic_cast<VoidTypeASTNode const *>(&other)) {
+      return true;
+    } else
+      return false;
+  }
+
   [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
   ComplementASTNode::emitTACKY() const
   {
@@ -349,7 +362,7 @@ namespace SC2 {
   }
 
   std::vector<std::shared_ptr<InstructionTACKYASTNode>>
-  StatementASTNode::emitTACKY(std::string_view identifier) const
+  ReturnStatementASTNode::emitTACKY(std::string_view identifier) const
   {
     auto [value, instructions]{
       getExpression()->emitTACKY(ExpressionASTNodeEmitTACKYInput{
@@ -360,11 +373,28 @@ namespace SC2 {
     return instructions;
   }
 
-  std::shared_ptr<FunctionTACKYASTNode> FunctionASTNode::emitTACKY() const
+  std::vector<std::shared_ptr<InstructionTACKYASTNode>>
+  ExpressionStatementASTNode::emitTACKY(std::string_view identifier) const
+  {
+    auto [_, instructions]{
+      getExpression()->emitTACKY(ExpressionASTNodeEmitTACKYInput{
+        identifier,
+        std::vector<std::shared_ptr<InstructionTACKYASTNode>>{} })
+    };
+    return instructions;
+  }
+
+  std::shared_ptr<FunctionTACKYASTNode> FunctionASTNode::emitTACKY()
   {
     return std::make_shared<FunctionTACKYASTNode>(
       getIdentifier(),
-      getStatement()->emitTACKY(getIdentifier())
+      getBlockItems()
+        | std::views::transform(
+          [this](std::shared_ptr<BlockItemASTNode> block_item) {
+      return block_item->emitTACKY(getIdentifier());
+    }
+        )
+        | std::views::join | std::ranges::to<std::vector>()
     );
   }
 

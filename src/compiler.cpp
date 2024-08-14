@@ -37,7 +37,7 @@ int main(int argc, char const * const * const argv)
       if (argc == 3) {
         if (argv[1] != "--lex"s && argv[1] != "--parse"s
             && argv[1] != "--codegen"s && argv[1] != "--tacky"s
-            && argv[1] != "-S"s)
+            && argv[1] != "--validate"s && argv[1] != "-S"s)
           throw std::invalid_argument(
             std::format("Invalid long option: {}", argv[1])
           );
@@ -68,7 +68,8 @@ int main(int argc, char const * const * const argv)
     SC2::Lexer  lexer{ program_text };
     SC2::Parser parser{ lexer };
     auto const  program{ parser.parseProgram() };
-    if (option && *option == "--parse") return EXIT_SUCCESS;
+    if (option && (*option == "--parse" || *option == "--validate"))
+      return EXIT_SUCCESS;
     auto const tacky{ program->emitTACKY() };
     if (option && *option == "--tacky") return EXIT_SUCCESS;
     auto const assembly{ tacky->emitAssembly() };
