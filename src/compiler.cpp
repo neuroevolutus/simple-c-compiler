@@ -1,4 +1,5 @@
 #include <sc2/lexer.hpp>
+#include <sc2/parser.hpp>
 
 #include <cstdlib>
 #include <fstream>
@@ -46,10 +47,14 @@ int main(int argc, char const * const * const argv)
     }
     std::ostringstream program_buffer{};
     program_buffer << file_stream.rdbuf();
-    std::string const program{ program_buffer.str() };
-    SC2::Lexer        lexer{ program };
-    for (auto const &token: lexer);
+    std::string const program_text{ program_buffer.str() };
+    SC2::Lexer        dummy_lexer{ program_text };
+    for (auto const &token: dummy_lexer);
     if (option && *option == "--lex") return EXIT_SUCCESS;
+    SC2::Lexer  lexer{ program_text };
+    SC2::Parser parser{ lexer };
+    auto const  program{ parser.parseProgram() };
+    if (option && *option == "--parse") return EXIT_SUCCESS;
   } catch (...) {
     exit_with_error_message();
   }

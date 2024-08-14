@@ -1,15 +1,24 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_exception.hpp>
+#include <sc2/ast.hpp>
 #include <sc2/lexer.hpp>
+#include <sc2/parser.hpp>
 #include <string_view>
 
 #include <array>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <ranges>
 #include <variant>
 #include <vector>
+
+static constexpr char const * const basic_program_text{
+  "int main(void) {\n"
+  "  return 2;\n"
+  "}\n"
+};
 
 TEST_CASE("lexer behaves correctly")
 {
@@ -81,22 +90,19 @@ TEST_CASE("lexer behaves correctly")
   }
   SECTION("literal constants are only lexed when followed by EOF or spaces")
   {
-    SC2::Lexer invalid_lexer_zero{ "1234a" };
     REQUIRE_THROWS_MATCHES(
-      invalid_lexer_zero.begin(),
-      SC2::InvalidTokenError,
+      SC2::Lexer{ "1234a" },
+      SC2::LexerInvalidTokenError,
       Catch::Matchers::Message("Lexer error: Invalid token: 1234a")
     );
-    SC2::Lexer invalid_lexer_one{ "1234A" };
     REQUIRE_THROWS_MATCHES(
-      invalid_lexer_one.begin(),
-      SC2::InvalidTokenError,
+      SC2::Lexer{ "1234A" },
+      SC2::LexerInvalidTokenError,
       Catch::Matchers::Message("Lexer error: Invalid token: 1234A")
     );
-    SC2::Lexer invalid_lexer_two{ "1234_" };
     REQUIRE_THROWS_MATCHES(
-      invalid_lexer_two.begin(),
-      SC2::InvalidTokenError,
+      SC2::Lexer{ "1234_" },
+      SC2::LexerInvalidTokenError,
       Catch::Matchers::Message("Lexer error: Invalid token: 1234_")
     );
   }
@@ -125,14 +131,9 @@ TEST_CASE("lexer behaves correctly")
     REQUIRE(tokens[1].getSemicolon() == SC2::Semicolon);
     REQUIRE(tokens[2].getSemicolon() == SC2::Semicolon);
   }
-  SECTION("a full program is correctly lexed")
+  SECTION("a basic program is correctly lexed")
   {
-    char const * const program{
-      "int main(void) {\n"
-      "  return 2;\n"
-      "}"
-    };
-    SC2::Lexer              lexer{ program };
+    SC2::Lexer              lexer{ basic_program_text };
     std::vector<SC2::Token> tokens{};
     for (auto const &token: lexer) { tokens.push_back(token); }
     REQUIRE(tokens[0].getKeyword() == SC2::Keyword::INT);
@@ -145,5 +146,104 @@ TEST_CASE("lexer behaves correctly")
     REQUIRE(tokens[7].getLiteralConstant().getValue() == 2);
     REQUIRE(tokens[8].getSemicolon() == SC2::Semicolon);
     REQUIRE(tokens[9].getBrace() == SC2::Brace::RIGHT_BRACE);
+  }
+}
+
+TEST_CASE("parser behaves correctly")
+{
+  SECTION("a basic program is correctly parsed")
+  {
+    SC2::Lexer                    lexer{ basic_program_text };
+    SC2::Parser                   parser{ lexer };
+    std::shared_ptr<SC2::Program> program_ast{ parser.parseProgram() };
+    REQUIRE(program_ast->prettyPrint() == basic_program_text);
+  }
+  SECTION("extraneous tokens at the end of a program cause an error")
+  {
+    constexpr char const * const invalid_program_text{
+      "int main(void) {\n"
+      "  return 2;\n"
+      "}d"
+    };
+    SC2::Lexer  lexer{ invalid_program_text };
+    SC2::Parser parser{ lexer };
+    REQUIRE_THROWS_MATCHES(
+      parser.parseProgram(),
+      SC2::ParserNonTerminalError,
+      Catch::Matchers::Message("Parser error: invalid non-terminal <program>:\n"
+                               "Parser error: Extraneous token: (Identifier: d)"
+      )
+    );
+  }
+  SECTION("end of file is handled correctly")
+  {
+    constexpr char const * const invalid_program_text{
+      "int main(void) {\n"
+      "  return 2;\n"
+      ""
+    };
+    SC2::Lexer  lexer{ invalid_program_text };
+    SC2::Parser parser{ lexer };
+    REQUIRE_THROWS_MATCHES(
+      parser.parseProgram(),
+      SC2::ParserNonTerminalError,
+      Catch::Matchers::Message(
+        "Parser error: invalid non-terminal <program>:\n"
+        "Parser error: invalid non-terminal <function>:\n"
+        "Parser error: reached end of file"
+      )
+    );
+  }
+  SECTION("invalid tokens are handled correctly")
+  {
+    constexpr char const * const invalid_program_text_zero{
+      "int return(void) {\n"
+      "  return 2;\n"
+      "}"
+    };
+    SC2::Lexer  lexer_zero{ invalid_program_text_zero };
+    SC2::Parser parser_zero{ lexer_zero };
+    REQUIRE_THROWS_MATCHES(
+      parser_zero.parseProgram(),
+      SC2::ParserNonTerminalError,
+      Catch::Matchers::Message(
+        "Parser error: invalid non-terminal <program>:\n"
+        "Parser error: invalid non-terminal <function>:\n"
+        "Parser error: Cannot create (identifier) from (Keyword: return)"
+      )
+    );
+    constexpr char const * const invalid_program_text_one{
+      "int main(void) {\n"
+      "  return 2)\n"
+      "}"
+    };
+    SC2::Lexer  lexer_one{ invalid_program_text_one };
+    SC2::Parser parser_one{ lexer_one };
+    REQUIRE_THROWS_MATCHES(
+      parser_one.parseProgram(),
+      SC2::ParserNonTerminalError,
+      Catch::Matchers::Message(
+        "Parser error: invalid non-terminal <program>:\n"
+        "Parser error: invalid non-terminal <function>:\n"
+        "Parser error: invalid non-terminal <statement>:\n"
+        "Parser error: Expected (semicolon) but got (right parenthesis)"
+      )
+    );
+    constexpr char const * const invalid_program_text_two{
+      "int main(void) {\n"
+      "  return 2;\n"
+      "<"
+    };
+    SC2::Lexer  lexer_two{ invalid_program_text_two };
+    SC2::Parser parser_two{ lexer_two };
+    REQUIRE_THROWS_MATCHES(
+      parser_two.parseProgram(),
+      SC2::ParserNonTerminalError,
+      Catch::Matchers::Message(
+        "Parser error: invalid non-terminal <program>:\n"
+        "Parser error: invalid non-terminal <function>:\n"
+        "Lexer error: Invalid token: <"
+      )
+    );
   }
 }
