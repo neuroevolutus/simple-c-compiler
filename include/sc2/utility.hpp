@@ -1,7 +1,10 @@
 #ifndef SC2_UTILITY_HPP_INCLUDED
 #define SC2_UTILITY_HPP_INCLUDED
 
+#include <sc2/tokens.hpp>
+
 #include <cstddef>
+#include <format>
 #include <ostream>
 #include <string>
 
@@ -32,6 +35,12 @@ namespace SC2 {
         name
 #endif
       ;
+    }
+
+    static Identifier generateFreshIdentifier(Identifier identifier)
+    {
+      static std::size_t counter{};
+      return Identifier(std::format("{}.{}", identifier.getName(), counter++));
     }
   };
 } // namespace SC2

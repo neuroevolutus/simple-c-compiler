@@ -21,7 +21,7 @@ namespace SC2 {
     generateFunctionAssembly(std::shared_ptr<FunctionASTNode> function)
     {
       return std::make_shared<FunctionAssemblyASTNode>(
-        function->getName(),
+        function->getIdentifier(),
         generateInstructionsAssembly(function->getStatement())
       );
     }
@@ -39,7 +39,10 @@ namespace SC2 {
     static constexpr std::shared_ptr<ImmediateValueAssemblyASTNode>
     generateExpressionAssembly(std::shared_ptr<ExpressionASTNode> expression)
     {
-      return generateLiteralConstantAssembly(expression->getLiteralConstant());
+      return generateLiteralConstantAssembly(
+        std::dynamic_pointer_cast<LiteralConstantASTNode>(expression)
+          ->getLiteralConstant()
+      );
     }
 
     static constexpr std::shared_ptr<ImmediateValueAssemblyASTNode>

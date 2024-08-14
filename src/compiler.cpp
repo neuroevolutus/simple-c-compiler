@@ -1,5 +1,6 @@
 #include <sc2/assembly_ast.hpp>
 #include <sc2/assembly_generator.hpp>
+#include <sc2/ast.hpp>
 #include <sc2/compiler_error.hpp>
 #include <sc2/lexer.hpp>
 #include <sc2/parser.hpp>
@@ -16,7 +17,7 @@
 #include <utility>
 
 constexpr char const * const usage_error_message{
-  "Error: Usage: sc2 [-(-(lex|parse|codegen)|S)] /path/to/file.c\n"
+  "Error: Usage: sc2 [-(-(lex|parse|codegen|tacky)|S)] /path/to/file.c\n"
 };
 
 void exit_with_usage_error_message()
@@ -34,7 +35,8 @@ int main(int argc, char const * const * const argv)
     auto const &[option, preprocessed_file]{ [argc, argv] {
       if (argc == 3) {
         if (argv[1] != "--lex"s && argv[1] != "--parse"s
-            && argv[1] != "--codegen"s && argv[1] != "-S"s)
+            && argv[1] != "--codegen"s && argv[1] != "--tacky"s
+            && argv[1] != "-S"s)
           throw std::invalid_argument(
             std::format("Invalid long option: {}", argv[1])
           );
@@ -66,6 +68,8 @@ int main(int argc, char const * const * const argv)
     SC2::Parser parser{ lexer };
     auto const  program{ parser.parseProgram() };
     if (option && *option == "--parse") return EXIT_SUCCESS;
+    auto const tacky{ program->emitTACKY() };
+    if (option && *option == "--tacky") return EXIT_SUCCESS;
     auto const assembly{ SC2::AssemblyGenerator::generateProgramAssembly(program
     ) };
     if (option && *option == "--codegen") return EXIT_SUCCESS;

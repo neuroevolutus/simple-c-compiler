@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <memory>
 #include <ostream>
+#include <utility>
 #include <vector>
 
 namespace SC2 {
@@ -134,7 +135,7 @@ namespace SC2 {
       std::vector<std::shared_ptr<InstructionAssemblyASTNode>> instructions
     )
       : name{ name }
-      , instructions{ instructions }
+      , instructions{ std::move(instructions) }
     {}
 
     constexpr std::string getName() const { return name.getName(); }
