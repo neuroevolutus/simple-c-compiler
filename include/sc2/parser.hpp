@@ -404,14 +404,14 @@ namespace SC2 {
 
     public:
     [[nodiscard]] constexpr auto
-    getVariableToTypeAndUniqueIdentifierMap(this auto &self
-    ) noexcept -> decltype(auto)
+    getVariableToTypeAndUniqueIdentifierMap(this auto &self) noexcept
+      -> decltype(auto)
     {
       return (self.variable_to_type_and_unique_identifier_map);
     }
 
-    [[nodiscard]] constexpr auto getTypeAliasToTypeMap(this auto &self
-    ) noexcept -> decltype(auto)
+    [[nodiscard]] constexpr auto getTypeAliasToTypeMap(this auto &self) noexcept
+      -> decltype(auto)
     {
       return (self.type_alias_to_type_map);
     }
@@ -609,19 +609,21 @@ namespace SC2 {
       while (next_token.isBinaryOperatorToken()
              && next_token.getPrecedence() >= min_precedence) {
         if (next_token.isBasicAssignment()) {
-          if (!std::dynamic_pointer_cast<VariableASTNode>(left_operand))
+          if (auto const &variable{
+                std::dynamic_pointer_cast<VariableASTNode>(left_operand) };
+              variable) {
+            std::shared_ptr<BasicAssignmentOperatorASTNode> const
+              assign_operator{ parseAssignmentOperator() };
+            std::shared_ptr<ExpressionASTNode> const right_operand{
+              parseExpression(next_token.getPrecedence(), map)
+            };
+            left_operand = std::make_shared<AssignmentASTNode>(
+              assign_operator,
+              variable,
+              right_operand
+            );
+          } else
             throw InvalidLValueError(left_operand);
-          std::shared_ptr<BasicAssignmentOperatorASTNode> const assign_operator{
-            parseAssignmentOperator()
-          };
-          std::shared_ptr<ExpressionASTNode> const right_operand{
-            parseExpression(next_token.getPrecedence(), map)
-          };
-          left_operand = std::make_shared<AssignmentASTNode>(
-            assign_operator,
-            left_operand,
-            right_operand
-          );
         } else {
           std::shared_ptr<BinaryOperatorASTNode> const binary_operator{
             parseBinaryOperator()

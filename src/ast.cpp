@@ -22,24 +22,6 @@ namespace SC2 {
       return false;
   }
 
-  [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
-  ComplementASTNode::emitTACKY() const
-  {
-    return std::make_shared<ComplementTACKYASTNode>();
-  }
-
-  [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
-  NegateASTNode::emitTACKY() const
-  {
-    return std::make_shared<NegateTACKYASTNode>();
-  }
-
-  [[nodiscard]] std::shared_ptr<UnaryOperatorTACKYASTNode>
-  NotASTNode::emitTACKY() const
-  {
-    return std::make_shared<NotTACKYASTNode>();
-  }
-
   [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
   LiteralConstantASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput &&input
   ) const
@@ -52,23 +34,165 @@ namespace SC2 {
   }
 
   [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
-  UnaryExpressionASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput &&input
-  ) const
+  VariableASTNode::emitTACKY(ExpressionASTNodeEmitTACKYInput &&input) const
   {
-    auto const &[identifier, instructions]{ std::move(input) };
-    auto [source, new_instructions]{ getExpression()->emitTACKY(
+    auto const &[_, instructions]{ std::move(input) };
+    return ExpressionASTNodeEmitTACKYOutput{
+      std::make_shared<VariableTACKYASTNode>(getIdentifier()),
+      std::move(instructions)
+    };
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  emitDefaultTACKYForUnaryOperatorASTNode(
+    std::shared_ptr<UnaryOperatorTACKYASTNode> unary_operator,
+    UnaryOperatorASTNodeEmitTACKYInput       &&input
+  )
+  {
+    auto const &[identifier, expression, instructions]{ std::move(input) };
+    auto [source, new_instructions]{ expression->emitTACKY(
       ExpressionASTNodeEmitTACKYInput{ identifier, std::move(instructions) }
     ) };
     auto destination{ std::make_shared<VariableTACKYASTNode>(
       Utility::generateFreshIdentifierWithPrefix(identifier)
     ) };
-    new_instructions.push_back(std::make_shared<UnaryTACKYASTNode>(
-      getUnaryOperator()->emitTACKY(),
-      source,
+    new_instructions.push_back(
+      std::make_shared<UnaryTACKYASTNode>(unary_operator, source, destination)
+    );
+    return ExpressionASTNodeEmitTACKYOutput{ destination,
+                                             std::move(new_instructions) };
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  ComplementASTNode::emitTACKY(UnaryOperatorASTNodeEmitTACKYInput &&input) const
+  {
+    return emitDefaultTACKYForUnaryOperatorASTNode(
+      std::make_shared<ComplementTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  NegateASTNode::emitTACKY(UnaryOperatorASTNodeEmitTACKYInput &&input) const
+  {
+    return emitDefaultTACKYForUnaryOperatorASTNode(
+      std::make_shared<NegateTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  NotASTNode::emitTACKY(UnaryOperatorASTNodeEmitTACKYInput &&input) const
+  {
+    return emitDefaultTACKYForUnaryOperatorASTNode(
+      std::make_shared<NotTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  PrefixAddSubtractASTNode::emitTACKY(UnaryOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    auto const &[identifier, source_ast, instructions]{ std::move(input) };
+    auto [source, new_instructions]{ source_ast->emitTACKY(
+      ExpressionASTNodeEmitTACKYInput{ identifier, std::move(instructions) }
+    ) };
+    auto const &source_tacky{
+      std::dynamic_pointer_cast<VariableTACKYASTNode>(source)
+    };
+    auto destination{ std::make_shared<VariableTACKYASTNode>(
+      Utility::generateFreshIdentifierWithPrefix(identifier)
+    ) };
+    new_instructions.push_back(std::make_shared<BinaryTACKYASTNode>(
+      emitBinaryOperatorTACKYASTNode(),
+      source_tacky,
+      std::make_shared<LiteralConstantTACKYASTNode>(1),
+      source_tacky
+    ));
+    return ExpressionASTNodeEmitTACKYOutput{ source_tacky,
+                                             std::move(new_instructions) };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  PrefixIncrementASTNode::emitBinaryOperatorTACKYASTNode() const
+  {
+    return std::make_shared<AddTACKYASTNode>();
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  PrefixDecrementASTNode::emitBinaryOperatorTACKYASTNode() const
+  {
+    return std::make_shared<SubtractTACKYASTNode>();
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  PostfixAddSubtractASTNode::emitTACKY(
+    UnaryOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    auto const &[identifier, expression, instructions]{ std::move(input) };
+    auto [source, new_instructions]{ expression->emitTACKY(
+      ExpressionASTNodeEmitTACKYInput{ identifier, std::move(instructions) }
+    ) };
+    auto const &source_tacky{
+      std::dynamic_pointer_cast<VariableTACKYASTNode>(source)
+    };
+    auto temporary{ std::make_shared<VariableTACKYASTNode>(
+      Utility::generateFreshIdentifierWithPrefix(identifier)
+    ) };
+    new_instructions.push_back(
+      std::make_shared<CopyTACKYASTNode>(source_tacky, temporary)
+    );
+    new_instructions.push_back(std::make_shared<BinaryTACKYASTNode>(
+      emitBinaryOperatorTACKYASTNode(),
+      source_tacky,
+      std::make_shared<LiteralConstantTACKYASTNode>(1),
+      source_tacky
+    ));
+    return ExpressionASTNodeEmitTACKYOutput{ temporary,
+                                             std::move(new_instructions) };
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  PostfixIncrementASTNode::emitBinaryOperatorTACKYASTNode() const
+  {
+    return std::make_shared<AddTACKYASTNode>();
+  }
+
+  [[nodiscard]] std::shared_ptr<BinaryOperatorTACKYASTNode>
+  PostfixDecrementASTNode::emitBinaryOperatorTACKYASTNode() const
+  {
+    return std::make_shared<SubtractTACKYASTNode>();
+  }
+
+  struct EmitDefaultBinaryOperatorTACKYInput
+  {
+    std::string                                           identifier{};
+    std::shared_ptr<BinaryOperatorTACKYASTNode>           binary_operator;
+    std::shared_ptr<ValueTACKYASTNode>                    left_operand{};
+    std::shared_ptr<ValueTACKYASTNode>                    right_operand{};
+    std::vector<std::shared_ptr<InstructionTACKYASTNode>> instructions{};
+  };
+
+  [[nodiscard]] static ExpressionASTNodeEmitTACKYOutput
+  emitDefaultBinaryOperatorTACKY(EmitDefaultBinaryOperatorTACKYInput &&input)
+  {
+    auto
+      [identifier, binary_operator, left_operand, right_operand, instructions]{
+        std::move(input)
+      };
+    auto destination{ std::make_shared<VariableTACKYASTNode>(
+      Utility::generateFreshIdentifierWithPrefix(identifier)
+    ) };
+    instructions.push_back(std::make_shared<BinaryTACKYASTNode>(
+      binary_operator,
+      left_operand,
+      right_operand,
       destination
     ));
     return ExpressionASTNodeEmitTACKYOutput{ destination,
-                                             std::move(new_instructions) };
+                                             std::move(instructions) };
   }
 
   [[nodiscard]] static ExpressionASTNodeEmitTACKYOutput
@@ -88,19 +212,12 @@ namespace SC2 {
         identifier,
         std::move(left_operand_instructions) })
     };
-    auto destination{ std::make_shared<VariableTACKYASTNode>(
-      Utility::generateFreshIdentifierWithPrefix(identifier)
-    ) };
-    right_operand_instructions.push_back(std::make_shared<BinaryTACKYASTNode>(
-      binary_operator,
-      left_operand,
-      right_operand,
-      destination
-    ));
-    return ExpressionASTNodeEmitTACKYOutput{
-      destination,
-      std::move(right_operand_instructions)
-    };
+    return emitDefaultBinaryOperatorTACKY(EmitDefaultBinaryOperatorTACKYInput{
+      identifier,
+      std::move(binary_operator),
+      std::move(left_operand),
+      std::move(right_operand),
+      std::move(right_operand_instructions) });
   }
 
   [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
@@ -361,12 +478,179 @@ namespace SC2 {
     );
   }
 
+  [[nodiscard]] static ExpressionASTNodeEmitTACKYOutput
+  emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+    std::shared_ptr<BinaryOperatorTACKYASTNode>    binary_operator,
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  )
+  {
+    auto const &[identifier, variable, expression, instructions]{
+      std::move(input)
+    };
+    auto const &[source_tacky, new_instructions_zero]{
+      expression->emitTACKY({ identifier, std::move(instructions) })
+    };
+    auto [destination_tacky, new_instructions_one]{
+      variable->emitTACKY({ identifier, std::move(new_instructions_zero) })
+    };
+    auto [temp_destination_tacky, final_instructions]{
+      emitDefaultBinaryOperatorTACKY(EmitDefaultBinaryOperatorTACKYInput{
+        identifier,
+        std::move(binary_operator),
+        destination_tacky,
+        std::move(source_tacky),
+        std::move(new_instructions_one) })
+    };
+    final_instructions.push_back(std::make_shared<CopyTACKYASTNode>(
+      temp_destination_tacky,
+      std::dynamic_pointer_cast<VariableTACKYASTNode>(destination_tacky)
+    ));
+    return { destination_tacky, std::move(final_instructions) };
+  }
+
+  [[nodiscard]] static ExpressionASTNodeEmitTACKYOutput
+  emitTACKYForAssignment(BasicAssignmentOperatorASTNodeEmitTACKYInput &&input)
+  {
+    auto const &[identifier, variable, expression, instructions]{
+      std::move(input)
+    };
+    auto const &[source_tacky, new_instructions_zero]{
+      expression->emitTACKY({ identifier, std::move(instructions) })
+    };
+    auto [destination_tacky, new_instructions_one]{
+      variable->emitTACKY({ identifier, std::move(new_instructions_zero) })
+    };
+    new_instructions_one.push_back(std::make_shared<CopyTACKYASTNode>(
+      source_tacky,
+      std::dynamic_pointer_cast<VariableTACKYASTNode>(destination_tacky)
+    ));
+    return { destination_tacky, std::move(new_instructions_one) };
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  AssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitTACKYForAssignment(std::move(input));
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  AddAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<AddTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  DivideAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<DivideTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  ModuloAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<ModuloTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  MultiplyAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<MultiplyTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  SubtractAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<SubtractTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  BitwiseOrAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<BitwiseOrTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  BitwiseAndAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<BitwiseAndTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  BitwiseXorAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<BitwiseXorTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  LeftShiftAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<LeftShiftTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
+  [[nodiscard]] ExpressionASTNodeEmitTACKYOutput
+  RightShiftAssignmentOperatorASTNode::emitTACKY(
+    BasicAssignmentOperatorASTNodeEmitTACKYInput &&input
+  ) const
+  {
+    return emitDefaultTACKYForCompoundAssignmentOperatorASTNode(
+      std::make_shared<RightShiftTACKYASTNode>(),
+      std::move(input)
+    );
+  }
+
   std::vector<std::shared_ptr<InstructionTACKYASTNode>>
   ReturnStatementASTNode::emitTACKY(std::string_view identifier) const
   {
     auto [value, instructions]{
       getExpression()->emitTACKY(ExpressionASTNodeEmitTACKYInput{
-        identifier,
+        std::string{ identifier },
         std::vector<std::shared_ptr<InstructionTACKYASTNode>>{} })
     };
     instructions.push_back(std::make_shared<ReturnTACKYASTNode>(value));
@@ -378,23 +662,46 @@ namespace SC2 {
   {
     auto [_, instructions]{
       getExpression()->emitTACKY(ExpressionASTNodeEmitTACKYInput{
-        identifier,
+        std::string{ identifier },
         std::vector<std::shared_ptr<InstructionTACKYASTNode>>{} })
     };
     return instructions;
   }
 
+  [[nodiscard]] std::vector<std::shared_ptr<InstructionTACKYASTNode>>
+  DeclarationASTNode::emitTACKY(std::string_view identifier) const
+  {
+    if (initializer) {
+      auto [_, instructions]{
+        emitTACKYForAssignment(BasicAssignmentOperatorASTNodeEmitTACKYInput{
+          std::string{ identifier },
+          std::make_shared<VariableASTNode>(getIdentifier()),
+          getInitializer(),
+          std::vector<std::shared_ptr<InstructionTACKYASTNode>>() })
+      };
+      return instructions;
+    } else {
+      return std::vector<std::shared_ptr<InstructionTACKYASTNode>>();
+    }
+  }
+
   std::shared_ptr<FunctionTACKYASTNode> FunctionASTNode::emitTACKY()
   {
-    return std::make_shared<FunctionTACKYASTNode>(
-      getIdentifier(),
+    auto tacky_block_items{
       getBlockItems()
-        | std::views::transform(
-          [this](std::shared_ptr<BlockItemASTNode> block_item) {
+      | std::views::transform(
+        [this](std::shared_ptr<BlockItemASTNode> block_item) {
       return block_item->emitTACKY(getIdentifier());
     }
-        )
-        | std::views::join | std::ranges::to<std::vector>()
+      )
+      | std::views::join | std::ranges::to<std::vector>()
+    };
+    tacky_block_items.push_back(std::make_shared<ReturnTACKYASTNode>(
+      std::make_shared<LiteralConstantTACKYASTNode>(0)
+    ));
+    return std::make_shared<FunctionTACKYASTNode>(
+      getIdentifier(),
+      tacky_block_items
     );
   }
 
