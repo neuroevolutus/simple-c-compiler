@@ -1,0 +1,3 @@
+* Simple C Compiler
+
+This repository contains my C++ implementation of the C compiler described in Nora Sandler's fantastic book _Writing a C Compiler_. I have so far implemented everything through Chapter 5, including the extra credit. I plan to take a break from the implementation for a bit to refactor the code I have written until now.
